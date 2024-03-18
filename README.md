@@ -32,6 +32,10 @@ $ poetry run flask db migrate
 $ poetry run flask db upgrade
 ```
 
+## Adding Dependencies with Poetry
+
+`poetry add <package-name>`
+
 ## Accessing Swagger
 
 `http://localhost:5001/api/docs`
@@ -41,6 +45,4 @@ $ poetry run flask db upgrade
 3. Copy the token received
 4. Click on the Authorize button on the top right corner and enter `Token <token>` and click Authorize
 
-## Adding Dependencies with Poetry
-
-`poetry add <package-name>`
+![Screenshot 2024-03-18 at 00 25 09](https://github.com/pythonreactor/cpsc-449-assignment-1/assets/19892394/b12fdd94-e6b6-40d7-b5b9-0778074599c5)
