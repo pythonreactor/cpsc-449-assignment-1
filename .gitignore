@@ -1,0 +1,29 @@
+# LOCAL DEVELOPMENT
+
+# macOS
+.DS_Store
+
+# iPython
+ipython_config.py
+
+# Environments
+.venv/
+.venv*/
+venv/
+venv*/
+
+# IDE files
+.idea/
+
+# Log files
+*.log
+nohup.out
+
+# Pytest
+.pytest_cache/
+
+# Python
+__pycache__/
+
+# Docker
+.docker/cpsc-449-1-mysql

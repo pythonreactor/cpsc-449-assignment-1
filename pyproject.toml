@@ -1,0 +1,32 @@
+# Documentation
+# https://python-poetry.org/docs/basic-usage/
+
+[tool.poetry]
+name = "cpsc-449-1"
+version = "1.0.0"
+description = "CPSC 449 Assignment 1"
+authors = ["CSUF <engineering@csu.fullerton.edu>"]
+maintainers = ["CSUF <engineering@su.fullerton.edu>"]
+repository = "https://github.com/pythonreactor/cpsc-449-1"
+license = "Proprietary"
+readme = "README.md"
+packages = [
+    { include = "flask_app", from = "src" }
+]
+
+[tool.poetry.dependencies]
+# Use poetry add <package> to add dependencies
+
+python = "^3.11"
+flask = "^3.0.2"
+pydantic = {extras = ["email"], version = "^2.6.4"}
+flask-sqlalchemy = "^3.1.1"
+pymysql = "^1.1.0"
+flask-openapi3 = "^3.0.2"
+flask-migrate = "^4.0.7"
+bcrypt = "^4.1.2"
+flask-cors = "^4.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
