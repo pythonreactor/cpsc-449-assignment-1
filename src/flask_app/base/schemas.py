@@ -1,8 +1,15 @@
+import json
 from http import HTTPStatus
-from typing import Optional
+from typing import (
+    Dict,
+    List,
+    Optional,
+    Union
+)
 
 from pydantic import (
     BaseModel,
+    root_validator,
     validator
 )
 
@@ -23,12 +30,12 @@ class BaseErrorResponseSchema(BaseModel):
 
 
 class BasePaginationSchema(BaseModel):
-    page: int = 0
+    page: int = 1
     per_page: int = 25
 
     @validator('page', pre=True, always=True)
     def validate_page(cls, value):
-        return max(0, int(value))
+        return max(1, int(value))
 
     @validator('per_page', pre=True, always=True)
     def validate_per_page(cls, value):
@@ -45,6 +52,7 @@ class BasePaginationResponseSchema(BaseModel):
 class BaseListQuerySchema(BasePaginationSchema):
     direction: base_constants.SortDirectionEnum = base_constants.SortDirectionEnum.Ascending
     order_by: Optional[str] = ''
+    id_in: Optional[Union[List[int], str]] = list()
 
     @validator('direction', always=True)
     def validate_direction(cls, value):
@@ -53,6 +61,16 @@ class BaseListQuerySchema(BasePaginationSchema):
         """
         return value.value
 
+    @validator('id_in', always=True)
+    def validate_id_in(cls, value):
+        """
+        Validator to convert the GET str(list) into a List
+        """
+        if isinstance(value, str):
+            return json.loads(value)
+
+        return value
+
 
 class BaseListResponseSchema(BaseSuccessResponseSchema):
     ...
@@ -60,6 +78,39 @@ class BaseListResponseSchema(BaseSuccessResponseSchema):
 
 class BaseDetailQuerySchema(BaseModel):
     id: int
+
+
+class BaseDetailResponseSchema(BaseSuccessResponseSchema):
+    data: Dict = dict()
+
+
+class BaseDeleteQuerySchema(BaseModel):
+    id: Optional[int] = None
+    id_in: Optional[Union[List[int], str]] = list()
+
+    @validator('id_in', always=True)
+    def validate_id_in(cls, value):
+        """
+        Validator to convert the GET str(list) into a List
+        """
+        if isinstance(value, str):
+            return json.loads(value)
+
+        return value
+
+    @root_validator(skip_on_failure=True)
+    def validate_id(cls, values):
+        if values.get('id') and values.get('id_in'):
+            raise ValueError('id and id_in cannot be used together')
+        elif not values.get('id') and not values.get('id_in'):
+            raise ValueError('id or id_in is required')
+
+        return values
+
+
+class BaseDeleteResponseSchema(BaseSuccessResponseSchema):
+    status: int = HTTPStatus.RESET_CONTENT
+
 
 # endregion
 

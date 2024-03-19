@@ -10,6 +10,7 @@ from flask_openapi3 import APIView
 import flask_app.iam.models as iam_models
 from flask_app import settings
 from flask_app.base.api import (
+    BaseDeleteAPI,
     BaseDetailAPI,
     BaseListAPI
 )
@@ -29,6 +30,8 @@ from flask_app.iam.schemas import (
     LoginResponseSchema,
     SignupRequestSchema,
     SignupResponseSchema,
+    UserDeleteQuerySchema,
+    UserDeleteResponseSchema,
     UserDetailQuerySchema,
     UserDetailRequestSchema,
     UserDetailResponseSchema,
@@ -174,3 +177,32 @@ class UserDetailAPI(BaseDetailAPI):
     @protected_view
     def patch(self, query: request_query_schema, body: request_body_schema):
         return super().patch(query, body)
+
+
+@api_view_v1.route('/users/delete')
+class UserDeleteAPI(BaseDeleteAPI):
+    """
+    API endpoint for viewing or updating a single user
+    """
+    authentication_class = IAMTokenAuthentication
+
+    request_query_schema = UserDeleteQuerySchema
+    response_schema = UserDeleteResponseSchema
+
+    db = db
+    model = iam_models.User
+
+    @api_view_v1.doc(
+        operation_id='User Detail API DELETE',
+        summary='User detail delete endpoint',
+        description='This endpoint is used to delete a single user.',
+        responses={
+            HTTPStatus.RESET_CONTENT: response_schema,
+            HTTPStatus.BAD_REQUEST: BadRequestResponseSchema,
+            HTTPStatus.UNAUTHORIZED: UnauthorizedResponseSchema
+        },
+        security=settings.API_TOKEN_SECURITY
+    )
+    @protected_view
+    def delete(self, query: request_query_schema):
+        return super().delete(query)

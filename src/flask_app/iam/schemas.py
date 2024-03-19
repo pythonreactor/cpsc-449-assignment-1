@@ -1,4 +1,7 @@
-from typing import Optional
+from typing import (
+    List,
+    Optional
+)
 
 from pydantic import (
     BaseModel,
@@ -149,7 +152,19 @@ class UserDetailRequestSchema(BaseModel):
         return value.title()
 
 
-class UserDetailResponseSchema(base_schemas.BaseSuccessResponseSchema):
+class UserDetailResponseSchema(base_schemas.BaseDetailResponseSchema):
     data: UserObjectSchema
+
+# endregion
+
+
+# region User Delete schemas
+
+class UserDeleteQuerySchema(base_schemas.BaseDeleteQuerySchema):
+    ...
+
+
+class UserDeleteResponseSchema(base_schemas.BaseDeleteResponseSchema):
+    ...
 
 # endregion

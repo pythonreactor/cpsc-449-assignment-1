@@ -10,8 +10,10 @@ from flask_app.iam import db
 
 
 class IAMAuthToken(db.Model, BaseFlaskModel):
+    __tablename__ = 'iam_auth_token'
+
     key = db.Column(db.String(128), primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
 
     @classmethod
     def generate_key(cls):
@@ -58,6 +60,8 @@ class IAMAuthToken(db.Model, BaseFlaskModel):
 
 
 class User(db.Model, BaseFlaskModel):
+    __tablename__ = 'user'
+
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(100), unique=True, nullable=False)
     username = db.Column(db.String(100), unique=True, nullable=False)
@@ -65,7 +69,7 @@ class User(db.Model, BaseFlaskModel):
     first_name = db.Column(db.String(100), nullable=False)
     last_name = db.Column(db.String(100), nullable=False)
 
-    token = db.relationship('IAMAuthToken', backref='user', lazy=True)
+    token = db.relationship('IAMAuthToken', backref='user', lazy=True, cascade='all, delete-orphan')
 
     @property
     def password(self):
