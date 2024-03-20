@@ -16,7 +16,7 @@ $ docker-compose up -d
 
 If you prefer not to auto-run the flask app in the Docker container,
 you can swap `command: poetry run python app.py` with `command: tail -f /dev/null` in the docker-compose.yml file
-and then run the following commands after you've built the containers:
+and then run the following commands from inside the built app container:
 
 ```bash
 $ docker exec -it cpsc-449-1-app /bin/zsh
