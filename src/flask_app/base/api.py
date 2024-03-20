@@ -237,7 +237,7 @@ class BaseDetailAPI(MethodView):
         subject_model = self.__class__.model
         instance = subject_model.query.filter_by(id=pk).first()
 
-        if hasattr(subject_model, 'user_id') and not instance.user_id == user.id:
+        if hasattr(subject_model, 'user_id') and instance and not instance.user_id == user.id:
             return None
 
         return instance
@@ -291,7 +291,7 @@ class BaseDeleteAPI(MethodView):
         """
         user = getattr(g, 'user', self.__class__.authentication_class.user)
         subject_model = self.__class__.model
-        queryset = subject_model.query.filter(subject_model.user_id == user.id).filter(id == query.id)
+        queryset = subject_model.query.filter(subject_model.user_id == user.id).filter(subject_model.id == query.id)
 
         return queryset
 

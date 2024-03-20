@@ -93,3 +93,5 @@ class IAMTokenAuthentication(BaseAuthentication):
 
                 cls.authenticated = False
                 cls.response = jsonify(response_body), HTTPStatus.UNAUTHORIZED
+
+        cls.authenticated = True

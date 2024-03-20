@@ -6,7 +6,7 @@ class Inventory(db.Model, BaseFlaskModel):
     __tablename__ = 'inventory'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(128), nullable=False)
+    name = db.Column(db.String(128), unique=True, nullable=False)
     category = db.Column(db.String(128), nullable=False)
 
     weight = db.Column(db.Float, nullable=False)

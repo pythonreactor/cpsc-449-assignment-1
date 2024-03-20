@@ -133,7 +133,7 @@ class InventoryListAPI(BaseListAPI):
         return super().get(query)
 
 
-@api_view_v1.route('/inventory/<int:id>')
+@api_view_v1.route('/inventory')
 class InventoryDetailAPI(BaseDetailAPI):
     """
     API endpoint for viewing or updating a single inventory item

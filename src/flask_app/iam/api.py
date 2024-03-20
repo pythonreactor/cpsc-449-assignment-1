@@ -142,7 +142,7 @@ class UserListAPI(BaseListAPI):
         return super().get(query)
 
 
-@api_view_v1.route('/user/<int:id>')
+@api_view_v1.route('/user')
 class UserDetailAPI(BaseDetailAPI):
     """
     API endpoint for viewing or updating a single user

@@ -30,6 +30,9 @@ class IAMAuthToken(db.Model, BaseFlaskModel):
 
             try:
                 db.session.commit()
+                user = getattr(self, 'user', None)
+                if user:
+                    db.session.refresh(user)
             except Exception:
                 db.session.rollback()
                 pass
