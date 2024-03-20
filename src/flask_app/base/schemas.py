@@ -49,6 +49,16 @@ class BasePaginationResponseSchema(BaseModel):
     prev_page: Optional[int]
 
 
+class BaseCreateResponseSchema(BaseSuccessResponseSchema):
+    status: int = HTTPStatus.CREATED
+    data: Dict = dict()
+
+
+class BaseBulkCreateResponseSchema(BaseSuccessResponseSchema):
+    status: int = HTTPStatus.CREATED
+    data: List[Dict] = list(dict())
+
+
 class BaseListQuerySchema(BasePaginationSchema):
     direction: base_constants.SortDirectionEnum = base_constants.SortDirectionEnum.Ascending
     order_by: Optional[str] = ''
@@ -86,10 +96,13 @@ class BaseDetailResponseSchema(BaseSuccessResponseSchema):
 
 class BaseDeleteQuerySchema(BaseModel):
     id: Optional[int] = None
-    id_in: Optional[Union[List[int], str]] = list()
 
-    @validator('id_in', always=True)
-    def validate_id_in(cls, value):
+
+class BaseBulkDeleteRequestSchema(BaseModel):
+    ids: List[int]
+
+    @validator('ids', always=True)
+    def validate_ids(cls, value):
         """
         Validator to convert the GET str(list) into a List
         """
@@ -98,14 +111,9 @@ class BaseDeleteQuerySchema(BaseModel):
 
         return value
 
-    @root_validator(skip_on_failure=True)
-    def validate_id(cls, values):
-        if values.get('id') and values.get('id_in'):
-            raise ValueError('id and id_in cannot be used together')
-        elif not values.get('id') and not values.get('id_in'):
-            raise ValueError('id or id_in is required')
 
-        return values
+class BaseBulkDeleteResponseSchema(BaseSuccessResponseSchema):
+    status: int = HTTPStatus.RESET_CONTENT
 
 
 class BaseDeleteResponseSchema(BaseSuccessResponseSchema):

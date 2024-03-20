@@ -20,8 +20,11 @@ def create_app():
 
     with app.app_context():
         from flask_app.iam.api import api_view_v1 as iam_api_view_v1
+        from flask_app.inventory.api import \
+            api_view_v1 as inventory_api_view_v1
 
         app.register_api_view(iam_api_view_v1)
+        app.register_api_view(inventory_api_view_v1)
 
     return app
 

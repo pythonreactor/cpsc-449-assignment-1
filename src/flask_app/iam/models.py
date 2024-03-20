@@ -69,7 +69,10 @@ class User(db.Model, BaseFlaskModel):
     first_name = db.Column(db.String(100), nullable=False)
     last_name = db.Column(db.String(100), nullable=False)
 
+    is_superuser = db.Column(db.Boolean, default=False)
+
     token = db.relationship('IAMAuthToken', backref='user', lazy=True, cascade='all, delete-orphan')
+    inventory = db.relationship('Inventory', backref='user', lazy=True, cascade='all, delete-orphan')
 
     @property
     def password(self):

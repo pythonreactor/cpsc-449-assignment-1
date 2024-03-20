@@ -23,7 +23,8 @@ from flask_app.common.tags import iam_tag
 from flask_app.iam import db
 from flask_app.iam.authentication import (
     IAMTokenAuthentication,
-    protected_view
+    protected_view,
+    superuser_view
 )
 from flask_app.iam.schemas import (
     LoginRequestSchema,
@@ -182,7 +183,7 @@ class UserDetailAPI(BaseDetailAPI):
 @api_view_v1.route('/users/delete')
 class UserDeleteAPI(BaseDeleteAPI):
     """
-    API endpoint for viewing or updating a single user
+    Superuser API endpoint for deleting a single user
     """
     authentication_class = IAMTokenAuthentication
 
@@ -193,9 +194,9 @@ class UserDeleteAPI(BaseDeleteAPI):
     model = iam_models.User
 
     @api_view_v1.doc(
-        operation_id='User Detail API DELETE',
-        summary='User detail delete endpoint',
-        description='This endpoint is used to delete a single user.',
+        operation_id='Superuser User API DELETE',
+        summary='Superuser only: User delete endpoint',
+        description='Superuser only: This endpoint is used to delete a single user.',
         responses={
             HTTPStatus.RESET_CONTENT: response_schema,
             HTTPStatus.BAD_REQUEST: BadRequestResponseSchema,
@@ -203,6 +204,6 @@ class UserDeleteAPI(BaseDeleteAPI):
         },
         security=settings.API_TOKEN_SECURITY
     )
-    @protected_view
+    @superuser_view
     def delete(self, query: request_query_schema):
         return super().delete(query)
