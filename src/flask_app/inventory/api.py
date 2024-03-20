@@ -40,7 +40,7 @@ from flask_app.inventory.schemas import (
 )
 
 logger = logging.getLogger(__name__)
-api_view_v1 = APIView(url_prefix='/api/v1', view_tags=[inventory_tag])
+api_view_v1 = APIView(url_prefix='/api/v1')
 
 
 @api_view_v1.route('/inventory/create')
@@ -57,6 +57,7 @@ class InventoryCreateAPI(BaseCreateAPI):
     model = inventory_models.Inventory
 
     @api_view_v1.doc(
+        tags=[inventory_tag],
         operation_id='Inventory Create API POST',
         summary='Create inventory item',
         description='This endpoint is used to create a new inventory item.',
@@ -86,6 +87,7 @@ class InventoryBulkCreateAPI(BaseBulkCreateAPI):
     model = inventory_models.Inventory
 
     @api_view_v1.doc(
+        tags=[inventory_tag],
         operation_id='Inventory Bulk Create API POST',
         summary='Create many inventory items',
         description='This endpoint is used to create many inventory items.',
@@ -115,6 +117,7 @@ class InventoryListAPI(BaseListAPI):
     model = inventory_models.Inventory
 
     @api_view_v1.doc(
+        tags=[inventory_tag],
         operation_id='Inventory List API GET',
         summary='List inventory items',
         description='This endpoint is used to list inventory items in the system.',
@@ -145,6 +148,7 @@ class InventoryDetailAPI(BaseDetailAPI):
     model = inventory_models.Inventory
 
     @api_view_v1.doc(
+        tags=[inventory_tag],
         operation_id='Inventory Detail API GET',
         summary='Inventory detail endpoint',
         description='This endpoint is used to view a single inventory item.',
@@ -160,6 +164,7 @@ class InventoryDetailAPI(BaseDetailAPI):
         return super().get(query)
 
     @api_view_v1.doc(
+        tags=[inventory_tag],
         operation_id='Inventory Detail API PATCH',
         summary='Inventory detail endpoint',
         description='This endpoint is used to update a single inventory item.',
@@ -189,6 +194,7 @@ class InventoryDeleteAPI(BaseDeleteAPI):
     model = inventory_models.Inventory
 
     @api_view_v1.doc(
+        tags=[inventory_tag],
         operation_id='Inventory Delete API DELETE',
         summary='Inventory delete endpoint',
         description='This endpoint is used to delete a single inventory item.',
@@ -218,6 +224,7 @@ class InventoryBulkDeleteAPI(BaseBulkDeleteAPI):
     model = inventory_models.Inventory
 
     @api_view_v1.doc(
+        tags=[inventory_tag],
         operation_id='Inventory Bulk Delete API DELETE',
         summary='Inventory bulk delete endpoint',
         description='This endpoint is used to delete many inventory items.',

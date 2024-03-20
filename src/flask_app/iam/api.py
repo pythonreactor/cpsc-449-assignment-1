@@ -19,7 +19,10 @@ from flask_app.base.schemas import (
     NotFoundResponseSchema,
     UnauthorizedResponseSchema
 )
-from flask_app.common.tags import iam_tag
+from flask_app.common.tags import (
+    iam_tag,
+    superuser_tag
+)
 from flask_app.iam import db
 from flask_app.iam.authentication import (
     IAMTokenAuthentication,
@@ -31,6 +34,8 @@ from flask_app.iam.schemas import (
     LoginResponseSchema,
     SignupRequestSchema,
     SignupResponseSchema,
+    UserBulkDeleteRequestSchema,
+    UserBulkDeleteResponseSchema,
     UserDeleteQuerySchema,
     UserDeleteResponseSchema,
     UserDetailQuerySchema,
@@ -42,13 +47,14 @@ from flask_app.iam.schemas import (
 from flask_app.iam.utils import login_user
 
 logger = logging.getLogger(__name__)
-api_view_v1 = APIView(url_prefix='/api/v1', view_tags=[iam_tag])
+api_view_v1 = APIView(url_prefix='/api/v1')
 
 
 @api_view_v1.route('/signup')
 class SignupAPI:
 
     @api_view_v1.doc(
+        tags=[iam_tag],
         operation_id='Signup API POST',
         summary='New user signup',
         description='This endpoint is used to create a new user account.',
@@ -82,6 +88,7 @@ class LoginAPI:
     """
 
     @api_view_v1.doc(
+        tags=[iam_tag],
         operation_id='Login API POST',
         summary='User login',
         description='This endpoint is used to log into the system and receive an auth token.',
@@ -120,6 +127,7 @@ class UserListAPI(BaseListAPI):
     model = iam_models.User
 
     @api_view_v1.doc(
+        tags=[iam_tag],
         operation_id='User List API GET',
         summary='List all users',
         description='This endpoint is used to list all users in the system.',
@@ -149,6 +157,7 @@ class UserDetailAPI(BaseDetailAPI):
     model = iam_models.User
 
     @api_view_v1.doc(
+        tags=[iam_tag],
         operation_id='User Detail API GET',
         summary='User detail endpoint',
         description='This endpoint is used to view a single user.',
@@ -164,6 +173,7 @@ class UserDetailAPI(BaseDetailAPI):
         return super().get(query)
 
     @api_view_v1.doc(
+        tags=[iam_tag],
         operation_id='User Detail API PATCH',
         summary='User detail update endpoint',
         description='This endpoint is used to update a user account details.',
@@ -194,6 +204,7 @@ class UserDeleteAPI(BaseDeleteAPI):
     model = iam_models.User
 
     @api_view_v1.doc(
+        tags=[superuser_tag],
         operation_id='Superuser User API DELETE',
         summary='Superuser only: User delete endpoint',
         description='Superuser only: This endpoint is used to delete a single user.',
@@ -207,3 +218,33 @@ class UserDeleteAPI(BaseDeleteAPI):
     @superuser_view
     def delete(self, query: request_query_schema):
         return super().delete(query)
+
+
+@api_view_v1.route('/users/delete/bulk')
+class UserBulkDeleteAPI(BaseDeleteAPI):
+    """
+    Superuser API endpoint for deleting a single user
+    """
+    authentication_class = IAMTokenAuthentication
+
+    request_body_schema = UserBulkDeleteRequestSchema
+    response_schema = UserBulkDeleteResponseSchema
+
+    db = db
+    model = iam_models.User
+
+    @api_view_v1.doc(
+        tags=[superuser_tag],
+        operation_id='Superuser User Bulk Delete API DELETE',
+        summary='Superuser only: User bulk delete endpoint',
+        description='Superuser only: This endpoint is used to delete many users.',
+        responses={
+            HTTPStatus.RESET_CONTENT: response_schema,
+            HTTPStatus.BAD_REQUEST: BadRequestResponseSchema,
+            HTTPStatus.UNAUTHORIZED: UnauthorizedResponseSchema
+        },
+        security=settings.API_TOKEN_SECURITY
+    )
+    @superuser_view
+    def delete(self, body: request_body_schema):
+        return super().delete(body)

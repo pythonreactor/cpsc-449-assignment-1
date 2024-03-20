@@ -13,6 +13,7 @@ from flask_app.inventory import constants as inventory_constants
 
 # region Model schemas
 
+
 class InventoryObjectSchema(BaseModel):
     id: int
     name: str
@@ -22,8 +23,8 @@ class InventoryObjectSchema(BaseModel):
 
 # endregion
 
-
 # region Inventory Create schemas
+
 
 class InventoryCreateRequestSchema(BaseModel):
     name: str
@@ -51,8 +52,8 @@ class InventoryCreateResponseSchema(base_schemas.BaseCreateResponseSchema):
 
 # endregion
 
-
 # region Inventory Bulk Create schemas
+
 
 class InventoryBulkCreateRequestSchema(BaseModel):
     items: List[InventoryCreateRequestSchema]
@@ -63,8 +64,8 @@ class InventoryBulkCreateResponseSchema(base_schemas.BaseBulkCreateResponseSchem
 
 # endregion
 
-
 # region Inventory Delete schemas
+
 
 class InventoryDeleteQuerySchema(base_schemas.BaseDeleteQuerySchema):
     ...
@@ -75,8 +76,8 @@ class InventoryDeleteResponseSchema(base_schemas.BaseDeleteResponseSchema):
 
 # endregion
 
-
 # region Inventory Bulk Delete schemas
+
 
 class InventoryBulkDeleteRequestSchema(base_schemas.BaseBulkDeleteRequestSchema):
     ...
@@ -87,8 +88,8 @@ class InventoryBulkDeleteResponseSchema(base_schemas.BaseBulkDeleteResponseSchem
 
 # endregion
 
-
 # region Inventory List schemas
+
 
 class InventoryListQuerySchema(base_schemas.BaseListQuerySchema):
     order_by: inventory_constants.InventoryOrderOnEnum = inventory_constants.InventoryOrderOnEnum.Id
@@ -107,8 +108,8 @@ class InventoryListResponseSchema(base_schemas.BaseListResponseSchema):
 
 # endregion
 
-
 # region Inventory Detail schemas
+
 
 class InventoryDetailQuerySchema(base_schemas.BaseDetailQuerySchema):
     ...

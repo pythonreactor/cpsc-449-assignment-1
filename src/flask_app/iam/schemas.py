@@ -13,6 +13,7 @@ from flask_app.iam import models as iam_models
 
 # region Model schemas
 
+
 class AuthTokenSchema(BaseModel):
     email: str
     token: str
@@ -27,8 +28,8 @@ class UserObjectSchema(BaseModel):
 
 # endregion
 
-
 # region Signup schemas
+
 
 class SignupRequestSchema(BaseModel):
     email: EmailStr
@@ -83,8 +84,8 @@ class SignupResponseSchema(base_schemas.BaseSuccessResponseSchema):
 
 # endregion
 
-
 # region Login schemas
+
 
 class LoginRequestSchema(BaseModel):
     email: EmailStr
@@ -103,8 +104,8 @@ class LoginResponseSchema(base_schemas.BaseSuccessResponseSchema, AuthTokenSchem
 
 # endregion
 
-
 # region User List schemas
+
 
 class UserListQuerySchema(base_schemas.BaseListQuerySchema):
     order_by: iam_constants.UserOrderOnEnum = iam_constants.UserOrderOnEnum.Id
@@ -123,8 +124,8 @@ class UserListResponseSchema(base_schemas.BaseListResponseSchema):
 
 # endregion
 
-
 # region User Detail schemas
+
 
 class UserDetailQuerySchema(base_schemas.BaseDetailQuerySchema):
     ...
@@ -154,14 +155,26 @@ class UserDetailResponseSchema(base_schemas.BaseDetailResponseSchema):
 
 # endregion
 
-
 # region User Delete schemas
+
 
 class UserDeleteQuerySchema(base_schemas.BaseDeleteQuerySchema):
     ...
 
 
 class UserDeleteResponseSchema(base_schemas.BaseDeleteResponseSchema):
+    ...
+
+# endregion
+
+# region User Bulk Delete schemas
+
+
+class UserBulkDeleteRequestSchema(base_schemas.BaseBulkDeleteRequestSchema):
+    ...
+
+
+class UserBulkDeleteResponseSchema(base_schemas.BaseBulkDeleteResponseSchema):
     ...
 
 # endregion
