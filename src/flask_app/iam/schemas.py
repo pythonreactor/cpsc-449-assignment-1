@@ -132,22 +132,24 @@ class UserDetailQuerySchema(base_schemas.BaseDetailQuerySchema):
 
 
 class UserDetailRequestSchema(BaseModel):
-    first_name: Optional[str]
-    last_name: Optional[str]
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
 
     @validator('first_name', always=True)
     def validate_first_name(cls, value):
         """
         Validator used to title the first_name value
         """
-        return value.title()
+        if value:
+            return value.title()
 
     @validator('last_name', always=True)
     def validate_last_name(cls, value):
         """
         Validator used to title the last_name value
         """
-        return value.title()
+        if value:
+            return value.title()
 
 
 class UserDetailResponseSchema(base_schemas.BaseDetailResponseSchema):

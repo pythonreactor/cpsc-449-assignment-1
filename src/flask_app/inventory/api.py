@@ -103,7 +103,7 @@ class InventoryBulkCreateAPI(BaseBulkCreateAPI):
         return super().post(body)
 
 
-@api_view_v1.route('/inventory')
+@api_view_v1.route('/inventory/items')
 class InventoryListAPI(BaseListAPI):
     """
     API endpoint for listing inventory items
@@ -133,7 +133,7 @@ class InventoryListAPI(BaseListAPI):
         return super().get(query)
 
 
-@api_view_v1.route('/inventory')
+@api_view_v1.route('/inventory/item')
 class InventoryDetailAPI(BaseDetailAPI):
     """
     API endpoint for viewing or updating a single inventory item
