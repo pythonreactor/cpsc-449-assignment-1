@@ -2,12 +2,12 @@
 # https://python-poetry.org/docs/basic-usage/
 
 [tool.poetry]
-name = "cpsc-449-1"
+name = "flask_inventory_management"
 version = "1.0.0"
-description = "CPSC 449 Assignment 1"
-authors = ["CSUF <engineering@csu.fullerton.edu>"]
-maintainers = ["CSUF <engineering@su.fullerton.edu>"]
-repository = "https://github.com/pythonreactor/cpsc-449-1"
+description = "Flask Inventory Management System"
+authors = ["Michael Gilbert <mj.gilbert@csu.fullerton.edu>"]
+maintainers = ["Michael Gilbert <mj.gilbert@csu.fullerton.edu>"]
+repository = "https://github.com/pythonreactor/flask-inventory-management"
 license = "Proprietary"
 readme = "README.md"
 packages = [
@@ -19,13 +19,14 @@ packages = [
 
 python = "^3.11"
 flask = "^3.0.2"
-pydantic = {extras = ["email"], version = "^2.6.4"}
-flask-sqlalchemy = "^3.1.1"
-pymysql = "^1.1.0"
+pydantic = {extras = ["email"], version = "^2.7"}
 flask-openapi3 = "^3.0.2"
-flask-migrate = "^4.0.7"
 bcrypt = "^4.1.2"
 flask-cors = "^4.0.0"
+flask-pymongo = "^2.3.0"
+
+[tool.poetry.group.dev.dependencies]
+ipython = "^8.23.0"
 
 [build-system]
 requires = ["poetry-core"]
