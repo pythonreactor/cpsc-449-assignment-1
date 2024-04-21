@@ -49,9 +49,9 @@ CORS_RESOURCES = {r'/api/v1/*': {'origins': 'http://localhost:5001'}}
 SWAGGER_DOC_PREFIX = '/api/docs'
 SWAGGER_URL = '/'
 SWAGGER_INFO = Info(
-    title='CPSC 449 Assignment 1 API',
-    version='1.0.0',
-    description="This Flask API was built for CPSC 449 Assignment 1",
+    title='Flask Inventory Management API',
+    version='2.0.0',
+    description="This Flask API was built for CSUF CPSC 449",
     contact=Contact(email='mj.gilbert@csu.fullerton.edu')
 )
 

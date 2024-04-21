@@ -3,7 +3,7 @@
 
 [tool.poetry]
 name = "flask_inventory_management"
-version = "1.0.0"
+version = "2.0.0"
 description = "Flask Inventory Management System"
 authors = ["Michael Gilbert <mj.gilbert@csu.fullerton.edu>"]
 maintainers = ["Michael Gilbert <mj.gilbert@csu.fullerton.edu>"]
