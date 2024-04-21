@@ -1,36 +1,35 @@
-version: "3.7"
-
 services:
-  app:
-    container_name: cpsc-449-1-app
+  fim-flask-app:
+    container_name: fim-flask-app
     build:
-      context: ../
+      context: ${FIM_PROJECT_PATH}
       dockerfile: .docker/Dockerfile
     ports:
-      - "5001:5000"
+      - ${FLASK_PORT_EXTERNAL}:${FLASK_PORT}
     volumes:
-      - ../:/code
-    environment:
-      - FLASK_ENV=development
+      - ${FIM_PROJECT_PATH}:/code
     depends_on:
-      - cpsc-449-1-mysql
-    # Leave the container running
-    # command: tail -f /dev/null
-    command: poetry run python app.py
-
-  cpsc-449-1-mysql:
-    container_name: cpsc-449-1-mysql
-    image: mysql:latest
-    ports:
-      - "3306:3306"
-    volumes:
-      - ./cpsc-449-1-mysql:/var/lib/mysql
+      - fim-mongo
     environment:
-      - MYSQL_ROOT_PASSWORD=docker
-      - MYSQL_DATABASE=cpsc_449_1_dev
-      - MYSQL_USER=docker
-      - MYSQL_PASSWORD=docker
-    command: "--default-authentication-plugin=mysql_native_password"
+      - FLASK_ENV=${FLASK_ENV}
+      - MONGO_URI=${MONGO_URI}
+      - MONGO_DB_NAME=${MONGO_DB_NAME}
+      - MONGO_USER=${MONGO_USER}
+      - MONGO_PASSWORD=${MONGO_PASSWORD}
+    # Leave the container running
+    command: tail -f /dev/null
+
+  fim-mongo:
+    container_name: fim-mongo
+    image: mongo:latest
+    ports:
+      - ${MONGO_PORT}:${MONGO_PORT}
+    volumes:
+      - ${FIM_MONGO_VOLUME_PATH}:/data/db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USER}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
+      - MONGO_INITDB_DATABASE=${MONGO_DB_NAME}
 
 volumes:
-  cpsc-449-1-mysql:
+  fim-mongo:

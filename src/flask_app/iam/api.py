@@ -1,35 +1,32 @@
 import logging
 from http import HTTPStatus
 
+import iam.models as iam_models
+from base.api import (
+    BaseBulkDeleteAPI,
+    BaseDetailAPI,
+    BaseListAPI
+)
+from base.schemas import (
+    BadRequestResponseSchema,
+    NotFoundResponseSchema,
+    UnauthorizedResponseSchema
+)
+from common.tags import (
+    iam_tag,
+    superuser_tag
+)
 from flask import (
     jsonify,
     session
 )
 from flask_openapi3 import APIView
-
-import flask_app.iam.models as iam_models
-from flask_app import settings
-from flask_app.base.api import (
-    BaseDeleteAPI,
-    BaseDetailAPI,
-    BaseListAPI
-)
-from flask_app.base.schemas import (
-    BadRequestResponseSchema,
-    NotFoundResponseSchema,
-    UnauthorizedResponseSchema
-)
-from flask_app.common.tags import (
-    iam_tag,
-    superuser_tag
-)
-from flask_app.iam import db
-from flask_app.iam.authentication import (
+from iam.authentication import (
     IAMTokenAuthentication,
     protected_view,
     superuser_view
 )
-from flask_app.iam.schemas import (
+from iam.schemas import (
     LoginRequestSchema,
     LoginResponseSchema,
     SignupRequestSchema,
@@ -44,7 +41,9 @@ from flask_app.iam.schemas import (
     UserListQuerySchema,
     UserListResponseSchema
 )
-from flask_app.iam.utils import login_user
+from iam.utils import login_user
+
+from flask_app import settings
 
 logger = logging.getLogger(__name__)
 api_view_v1 = APIView(url_prefix='/api/v1')
@@ -68,16 +67,11 @@ class SignupAPI:
         new_user_data = body.model_dump(exclude=['confirm_password'])
         new_user_data['username'] = new_user_data['email']
 
-        new_user = iam_models.User(**new_user_data)
-        db.session.add(new_user)
-
         try:
-            db.session.commit()
+            iam_models.User.create(**new_user_data)
             return jsonify(SignupResponseSchema(message='new user created successfully').dict()), HTTPStatus.CREATED
         except Exception:
             logger.exception('Error creating new user: %s', new_user_data['email'])
-
-            db.session.rollback()
             return jsonify(BadRequestResponseSchema(message='error creating new user').dict()), HTTPStatus.BAD_REQUEST
 
 
@@ -100,15 +94,15 @@ class LoginAPI:
         security=None
     )
     def post(self, body: LoginRequestSchema):
-        user = iam_models.User.query.filter_by(email=body.email).first()
+        user = iam_models.User.query.find_by_email(email=body.email)
         if not user:
             return jsonify(NotFoundResponseSchema(message='user not found').dict()), HTTPStatus.NOT_FOUND
 
         if not user.verify_password(body.password):
             return jsonify(BadRequestResponseSchema(message='invalid password').dict()), HTTPStatus.BAD_REQUEST
 
-        token = login_user(user)
-        session['user_id'] = user.id
+        token              = login_user(user)
+        session['user_id'] = str(user.id)
 
         return jsonify(LoginResponseSchema(message='auth token generated', email=user.email, token=token.key).dict()), HTTPStatus.OK
 
@@ -121,9 +115,8 @@ class UserListAPI(BaseListAPI):
     authentication_class = IAMTokenAuthentication
 
     request_query_schema = UserListQuerySchema
-    response_schema = UserListResponseSchema
+    response_schema      = UserListResponseSchema
 
-    db = db
     model = iam_models.User
 
     @api_view_v1.doc(
@@ -142,18 +135,20 @@ class UserListAPI(BaseListAPI):
         return super().get(query)
 
 
-@api_view_v1.route('/user')
+@api_view_v1.route('/users/<id>')
 class UserDetailAPI(BaseDetailAPI):
     """
-    API endpoint for viewing or updating a single user
+    API endpoint for viewing, updating, or deleting a single user
     """
     authentication_class = IAMTokenAuthentication
 
     request_query_schema = UserDetailQuerySchema
-    request_body_schema = UserDetailRequestSchema
-    response_schema = UserDetailResponseSchema
+    request_body_schema  = UserDetailRequestSchema
+    response_schema      = UserDetailResponseSchema
 
-    db = db
+    delete_request_query_schema = UserDeleteQuerySchema
+    delete_response_schema      = UserDeleteResponseSchema
+
     model = iam_models.User
 
     @api_view_v1.doc(
@@ -189,48 +184,33 @@ class UserDetailAPI(BaseDetailAPI):
     def patch(self, query: request_query_schema, body: request_body_schema):
         return super().patch(query, body)
 
-
-@api_view_v1.route('/users/delete')
-class UserDeleteAPI(BaseDeleteAPI):
-    """
-    Superuser API endpoint for deleting a single user
-    """
-    authentication_class = IAMTokenAuthentication
-
-    request_query_schema = UserDeleteQuerySchema
-    response_schema = UserDeleteResponseSchema
-
-    db = db
-    model = iam_models.User
-
     @api_view_v1.doc(
         tags=[superuser_tag],
         operation_id='Superuser User API DELETE',
         summary='Superuser only: User delete endpoint',
         description='Superuser only: This endpoint is used to delete a single user.',
         responses={
-            HTTPStatus.RESET_CONTENT: response_schema,
+            HTTPStatus.RESET_CONTENT: delete_response_schema,
             HTTPStatus.BAD_REQUEST: BadRequestResponseSchema,
             HTTPStatus.UNAUTHORIZED: UnauthorizedResponseSchema
         },
         security=settings.API_TOKEN_SECURITY
     )
     @superuser_view
-    def delete(self, query: request_query_schema):
+    def delete(self, query: delete_request_query_schema):
         return super().delete(query)
 
 
 @api_view_v1.route('/users/delete/bulk')
-class UserBulkDeleteAPI(BaseDeleteAPI):
+class UserBulkDeleteAPI(BaseBulkDeleteAPI):
     """
-    Superuser API endpoint for deleting a single user
+    Superuser API endpoint for deleting a batch of users
     """
     authentication_class = IAMTokenAuthentication
 
     request_body_schema = UserBulkDeleteRequestSchema
-    response_schema = UserBulkDeleteResponseSchema
+    response_schema     = UserBulkDeleteResponseSchema
 
-    db = db
     model = iam_models.User
 
     @api_view_v1.doc(

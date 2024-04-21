@@ -1,10 +1,5 @@
-# LOCAL DEVELOPMENT
-
 # macOS
 .DS_Store
-
-# iPython
-ipython_config.py
 
 # Environments
 .venv/
@@ -26,4 +21,4 @@ nohup.out
 __pycache__/
 
 # Docker
-.docker/cpsc-449-1-mysql
+.docker/volumes

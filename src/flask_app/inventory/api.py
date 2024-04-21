@@ -9,7 +9,6 @@ from flask_app.base.api import (
     BaseBulkCreateAPI,
     BaseBulkDeleteAPI,
     BaseCreateAPI,
-    BaseDeleteAPI,
     BaseDetailAPI,
     BaseListAPI
 )
@@ -22,7 +21,6 @@ from flask_app.iam.authentication import (
     IAMTokenAuthentication,
     protected_view
 )
-from flask_app.inventory import db
 from flask_app.inventory.schemas import (
     InventoryBulkCreateRequestSchema,
     InventoryBulkCreateResponseSchema,
@@ -51,9 +49,8 @@ class InventoryCreateAPI(BaseCreateAPI):
     authentication_class = IAMTokenAuthentication
 
     request_body_schema = InventoryCreateRequestSchema
-    response_schema = InventoryCreateResponseSchema
+    response_schema     = InventoryCreateResponseSchema
 
-    db = db
     model = inventory_models.Inventory
 
     @api_view_v1.doc(
@@ -81,9 +78,8 @@ class InventoryBulkCreateAPI(BaseBulkCreateAPI):
     authentication_class = IAMTokenAuthentication
 
     request_body_schema = InventoryBulkCreateRequestSchema
-    response_schema = InventoryBulkCreateResponseSchema
+    response_schema     = InventoryBulkCreateResponseSchema
 
-    db = db
     model = inventory_models.Inventory
 
     @api_view_v1.doc(
@@ -111,9 +107,8 @@ class InventoryListAPI(BaseListAPI):
     authentication_class = IAMTokenAuthentication
 
     request_query_schema = InventoryListQuerySchema
-    response_schema = InventoryListResponseSchema
+    response_schema      = InventoryListResponseSchema
 
-    db = db
     model = inventory_models.Inventory
 
     @api_view_v1.doc(
@@ -133,7 +128,7 @@ class InventoryListAPI(BaseListAPI):
         return super().get(query)
 
 
-@api_view_v1.route('/inventory/item')
+@api_view_v1.route('/inventory/items/<id>')
 class InventoryDetailAPI(BaseDetailAPI):
     """
     API endpoint for viewing or updating a single inventory item
@@ -141,10 +136,12 @@ class InventoryDetailAPI(BaseDetailAPI):
     authentication_class = IAMTokenAuthentication
 
     request_query_schema = InventoryDetailQuerySchema
-    request_body_schema = InventoryDetailRequestSchema
-    response_schema = InventoryDetailResponseSchema
+    request_body_schema  = InventoryDetailRequestSchema
+    response_schema      = InventoryDetailResponseSchema
 
-    db = db
+    delete_request_query_schema = InventoryDeleteQuerySchema
+    delete_response_schema      = InventoryDeleteResponseSchema
+
     model = inventory_models.Inventory
 
     @api_view_v1.doc(
@@ -179,20 +176,6 @@ class InventoryDetailAPI(BaseDetailAPI):
     def patch(self, query: request_query_schema, body: request_body_schema):
         return super().patch(query, body)
 
-
-@api_view_v1.route('/inventory/delete')
-class InventoryDeleteAPI(BaseDeleteAPI):
-    """
-    API endpoint for deleting a single inventory object
-    """
-    authentication_class = IAMTokenAuthentication
-
-    request_query_schema = InventoryDeleteQuerySchema
-    response_schema = InventoryDeleteResponseSchema
-
-    db = db
-    model = inventory_models.Inventory
-
     @api_view_v1.doc(
         tags=[inventory_tag],
         operation_id='Inventory Delete API DELETE',
@@ -210,7 +193,7 @@ class InventoryDeleteAPI(BaseDeleteAPI):
         return super().delete(query)
 
 
-@api_view_v1.route('/inventory/delete/bulk')
+@api_view_v1.route('/inventory/items/delete/bulk')
 class InventoryBulkDeleteAPI(BaseBulkDeleteAPI):
     """
     API endpoint for deleting many inventory objects
@@ -218,9 +201,8 @@ class InventoryBulkDeleteAPI(BaseBulkDeleteAPI):
     authentication_class = IAMTokenAuthentication
 
     request_body_schema = InventoryBulkDeleteRequestSchema
-    response_schema = InventoryBulkDeleteResponseSchema
+    response_schema     = InventoryBulkDeleteResponseSchema
 
-    db = db
     model = inventory_models.Inventory
 
     @api_view_v1.doc(

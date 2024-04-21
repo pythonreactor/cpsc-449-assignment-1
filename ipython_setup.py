@@ -1,7 +1,10 @@
+"""
+This script is used to initialize an iPython shell with the Flask app context.
+"""
 import logging
 
 from flask import (
-    current_app,
+    Flask,
     g
 )
 from flask_pymongo import PyMongo
@@ -10,6 +13,9 @@ from werkzeug.local import LocalProxy
 from flask_app import settings
 
 logger = logging.getLogger(__name__)
+
+app = Flask(__name__)
+app.config['MONGO_URI'] = settings.FlaskConfig.MONGO_URI
 
 
 def setup_database_indexes(database: PyMongo):
@@ -35,7 +41,7 @@ def get_db():
     db = getattr(g, "_database", None)
 
     if db is None:
-        db = g._database = PyMongo(current_app).db
+        db = g._database = PyMongo(app).db
 
     logger.info('Generating database indexes...')
     setup_database_indexes(database=db)
@@ -44,3 +50,14 @@ def get_db():
 
 
 db = LocalProxy(get_db)
+
+
+@app.shell_context_processor
+def make_shell_context():
+    return {'db': db, 'app': app}
+
+
+ctx = app.app_context()
+ctx.push()
+
+print('Initialized iPython shell with Flask app context.')

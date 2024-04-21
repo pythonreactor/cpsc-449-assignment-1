@@ -1,28 +1,41 @@
-from flask_app.base.models import BaseFlaskModel
-from flask_app.inventory import db
+import logging
+
+from flask_pymongo.wrappers import Collection
+from iam.models import User
+from inventory import schemas
+
+from flask_app import db
+
+logger = logging.getLogger(__name__)
 
 
-class Inventory(db.Model, BaseFlaskModel):
-    __tablename__ = 'inventory'
+class Inventory(schemas.InventoryModel):
+    """
+    Inventory model
+    """
 
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(128), unique=True, nullable=False)
-    category = db.Column(db.String(128), nullable=False)
-
-    weight = db.Column(db.Float, nullable=False)
-    price = db.Column(db.Float, nullable=False)
-
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
+    @classmethod
+    @property
+    def collection(cls) -> Collection:
+        return db.inventory
 
     @property
-    def obj_schema(self):
-        return dict(
-            id=self.id,
-            name=self.name,
-            category=self.category,
-            weight=self.weight,
-            price=self.price
-        )
+    def user(self) -> User:
+        return User.query.get(_id=self.user_id)
+
+    @user.setter
+    def user(self, user: User) -> None:
+        if not user:
+            raise ValueError('user cannot be None')
+        elif not isinstance(user, User):
+            raise TypeError('user must be an instance of User')
+
+        logger.info('Setting user for inventory item')
+        self.user_id = user.id
+
+    @user.deleter
+    def user(self) -> None:
+        raise NotImplementedError('Cannot delete a user from an inventory item')
 
     def __repr__(self):
-        return f'<{self.__class__.__name__}: {self.name}>'
+        return f'<{self.__class__.__name__}: {self.name} ({self.pk})>'

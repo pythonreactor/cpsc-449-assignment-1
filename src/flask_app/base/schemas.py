@@ -1,3 +1,4 @@
+import datetime
 import json
 from http import HTTPStatus
 from typing import (
@@ -7,15 +8,72 @@ from typing import (
     Union
 )
 
+from base import constants as base_constants
+from bson import ObjectId
 from pydantic import (
     BaseModel,
-    root_validator,
+    Field,
     validator
 )
 
-from flask_app.base import constants as base_constants
+# region Base Model schemas
 
-# region Base schemas
+class FIMObjectID(ObjectId):
+    """
+    Custom pydantic type for MongoDB ObjectId
+    """
+
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def __get_pydantic_json_schema__(cls, schema):
+        schema.update(type='string')
+
+    @classmethod
+    def validate(cls, value, values, **kwargs):
+        if not ObjectId.is_valid(value):
+            raise ValueError('Invalid ObjectId')
+
+        if isinstance(value, ObjectId):
+            if not isinstance(value, cls):
+                return cls(value)
+            else:
+                return value
+            return cls(value)
+
+        return ObjectId(value)
+
+
+class BaseModelSchema(BaseModel):
+    """
+    Base schema for Flask models
+    """
+    id: Optional[FIMObjectID] = Field(None, alias='_id', exclude=True)
+
+    created_at: datetime.datetime = Field(default_factory=datetime.datetime.utcnow)
+    updated_at: Optional[datetime.datetime] = None
+
+    def model_dump(self, override: bool = False, **kwargs):
+        return super().model_dump(**kwargs)
+
+    class Config:
+        populate_by_name = True
+        arbitrary_types_allowed = True
+
+        from_attributes = True
+        validate_assignment = True
+        json_encoders = {FIMObjectID: str}
+
+
+class BasePKModelSchema(BaseModelSchema):
+    pk: Optional[int] = None
+
+# endregion
+
+
+# region Base Response schemas
 
 class BaseSuccessResponseSchema(BaseModel):
     success: bool = True
