@@ -53,7 +53,7 @@ class AuthTokenModel(base_schemas.BaseModelSchema):
 
 class UserModel(base_models.BasePKFlaskModel):
     """
-    Base schema for the User model
+    Base schema for the User model.
     """
     email: EmailStr
     username: str
@@ -70,20 +70,22 @@ class UserModel(base_models.BasePKFlaskModel):
         password_hash_regex = r'^\$2[abxy]\$\d{2}\$[./0-9A-Za-z]{53}$'
 
         if value:
+            # Because we pass the `password` back in on each save, we don't want to force
+            # a re-hashing of the hashed version of a password
             if not re.match(password_hash_regex, value):
                 return bcrypt.hashpw(str(value).encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
             return value
 
         return None
 
-    @validator('first_name', always=True)
+    @validator('first_name', pre=True, always=True)
     def validate_first_name(cls, value):
         """
         Validator used to title the first_name value
         """
         return value.title()
 
-    @validator('last_name', always=True)
+    @validator('last_name', pre=True, always=True)
     def validate_last_name(cls, value):
         """
         Validator used to title the last_name value
@@ -93,7 +95,7 @@ class UserModel(base_models.BasePKFlaskModel):
     def model_dump(self, override: bool = True, **kwargs):
         """
         Override base Pydantic model_dump method to include only
-        the field's we'd want to return if `include` is not provided
+        the field's we'd want to return if `include` is not provided.
         """
         if override:
             if not kwargs.get('include', None):
@@ -101,16 +103,13 @@ class UserModel(base_models.BasePKFlaskModel):
 
         return super().model_dump(**kwargs)
 
-    class Config(base_models.BasePKFlaskModel.Config):
-        populate_by_name = True
-
 # endregion
 
 
 # region Response Model schemas
 
 class UserObjectResponseSchema(BaseModel):
-    id: int = Field(..., alias='pk')
+    id: int = Field(..., alias='pk', serialization_alias='id')
     first_name: str
     last_name: str
     email: str

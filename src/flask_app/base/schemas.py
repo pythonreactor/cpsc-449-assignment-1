@@ -59,6 +59,9 @@ class BaseModelSchema(BaseModel):
         return super().model_dump(**kwargs)
 
     class Config:
+        populate_by_name = True
+        arbitrary_types_allowed = True
+
         from_attributes = True
         validate_assignment = True
         json_encoders = {FIMObjectID: str}

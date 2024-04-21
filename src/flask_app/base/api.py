@@ -48,9 +48,8 @@ class BaseCreateAPI(MethodView):
     authentication_class = BaseAuthentication
 
     request_body_schema: pydantic.BaseModel = None
-    response_schema: pydantic.BaseModel = BaseCreateResponseSchema
+    response_schema: pydantic.BaseModel     = BaseCreateResponseSchema
 
-    db: PyMongo = None
     model: BaseFlaskModel = None
 
     def _generate_new_obj(self, body: request_body_schema, user: model = None, relate_user: bool = True) -> model:
@@ -58,13 +57,12 @@ class BaseCreateAPI(MethodView):
         Generate a new object for the given model
         """
         subject_model = self.__class__.model
-
-        new_obj_data = body.model_dump()
+        new_obj_data  = body.model_dump()
 
         if relate_user:
             new_obj_data['user_id'] = user.id
 
-        new_obj = subject_model(**new_obj_data)
+        new_obj = subject_model.create(**new_obj_data)
 
         return new_obj
 
@@ -72,21 +70,17 @@ class BaseCreateAPI(MethodView):
     def post(self, body: request_body_schema):
         user = getattr(g, 'user', self.__class__.authentication_class.user)
 
-        # TODO: Add permissions here
-        new_obj = self._generate_new_obj(body=body, user=user)
-
-        self.__class__.db.session.add(new_obj)
         try:
-            self.__class__.db.session.commit()
+            # TODO: Add permissions here
+            new_obj          = self._generate_new_obj(body=body, user=user)
             response_message = f'new {self.__class__.model.__name__} object created successfully'
 
-            return jsonify(self.__class__.response_schema(message=response_message, data=new_obj.obj_schema).dict()), HTTPStatus.CREATED
+            return jsonify(self.__class__.response_schema(message=response_message, data=new_obj.model_dump()).dict()), HTTPStatus.CREATED
 
         except Exception:
             err_msg = f'Error creating new {self.__class__.model.__name__} object'
             logger.exception(err_msg)
 
-            self.__class__.db.session.rollback()
             return jsonify(InternalServerErrorResponseSchema(message=err_msg).dict()), HTTPStatus.INTERNAL_SERVER_ERROR
 
 
@@ -97,26 +91,23 @@ class BaseBulkCreateAPI(BaseCreateAPI):
     authentication_class = BaseAuthentication
 
     request_body_schema: pydantic.BaseModel = None
-    response_schema: pydantic.BaseModel = BaseBulkCreateResponseSchema
+    response_schema: pydantic.BaseModel     = BaseBulkCreateResponseSchema
 
-    db: PyMongo = None
     model: BaseFlaskModel = None
 
     @protected_view
     def post(self, body: request_body_schema):
-        user = getattr(g, 'user', self.__class__.authentication_class.user)
+        user     = getattr(g, 'user', self.__class__.authentication_class.user)
         new_objs = list()
 
-        # TODO: Add permissions here
-        for item in body.items:
-            new_obj = self._generate_new_obj(body=item, user=user)
-            new_objs.append(new_obj)
-
-        self.__class__.db.session.add_all(new_objs)
         try:
-            self.__class__.db.session.commit()
+            # TODO: Add permissions here
+            for item in body.items:
+                new_obj = self._generate_new_obj(body=item, user=user)
+                new_objs.append(new_obj)
+
             response_message = f'new {self.__class__.model.__name__} objects created successfully'
-            response_data = [obj.obj_schema for obj in new_objs]
+            response_data    = [obj.model_dump() for obj in new_objs]
 
             return jsonify(self.__class__.response_schema(message=response_message, data=response_data).dict()), HTTPStatus.CREATED
 
@@ -124,7 +115,6 @@ class BaseBulkCreateAPI(BaseCreateAPI):
             err_msg = f'Error creating new {self.__class__.model.__name__} objects'
             logger.exception(err_msg)
 
-            self.__class__.db.session.rollback()
             return jsonify(InternalServerErrorResponseSchema(message=err_msg).dict()), HTTPStatus.INTERNAL_SERVER_ERROR
 
 

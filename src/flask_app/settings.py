@@ -35,6 +35,9 @@ MONGO_INDEXES = {
         IndexModel([('pk')], name='users_pk_unique', unique=True),
         IndexModel([('username')], name='username_unique', unique=True)
     ],
+    'inventory': [
+        IndexModel([('pk')], name='users_pk_unique', unique=True)
+    ]
 }
 
 

@@ -3,7 +3,6 @@ import logging
 from typing import Optional
 
 import bcrypt
-from base import schemas as base_schemas
 from flask_pymongo.wrappers import Collection
 from iam import schemas
 from iam.interface import UserQueryInterface
@@ -51,8 +50,6 @@ class User(schemas.UserModel):
     """
     User model
     """
-
-    # inventory = db.relationship('Inventory', backref='user', lazy=True, cascade='all, delete-orphan')
 
     @classmethod
     @property
@@ -118,8 +115,4 @@ class User(schemas.UserModel):
         return bcrypt.checkpw(password.encode('utf-8'), self.password.encode('utf-8'))
 
     def __repr__(self):
-        return f'<{self.__class__.__name__}: {self.email}>'
-
-    class Config(schemas.UserModel.Config):
-        arbitrary_types_allowed = True
-        json_encoders = {base_schemas.FIMObjectID: lambda v: str(v)}
+        return f'<{self.__class__.__name__}: {self.email} ({self.pk})>'
