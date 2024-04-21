@@ -1,11 +1,10 @@
 import datetime
 import logging
 
+import iam.models as iam_models
 from flask import request
 
-import flask_app.iam.models as iam_models
 from flask_app import settings
-from flask_app.iam import db
 
 logger = logging.getLogger(__name__)
 
@@ -14,22 +13,19 @@ def login_user(user: iam_models.User) -> iam_models.IAMAuthToken:
     """
     Fetch a user's auth token or create a new one
     """
-    token = iam_models.IAMAuthToken.query.filter_by(user_id=user.id).first()
-    if token and token.is_valid:
-        return token
-    else:
-        token = iam_models.IAMAuthToken(user_id=user.id, key=iam_models.IAMAuthToken.generate_key())
-        db.session.add(token)
+    logger.info('[%s] Generating new user auth token', user.email)
+    del user.token
 
-        try:
-            db.session.commit()
-        except Exception:
-            logger.exception('Error creating new auth token for user: %s', user.email)
+    token      = iam_models.IAMAuthToken()
+    user.token = token
 
-            db.session.rollback()
-            raise
+    try:
+        user.save()
+    except Exception:
+        logger.exception('Error creating new auth token for user: %s', user.email)
+        raise
 
-        return token
+    return token
 
 
 class IAMTokenAuthenticator:

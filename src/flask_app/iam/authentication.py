@@ -3,15 +3,14 @@ from functools import wraps
 from http import HTTPStatus
 from typing import Optional
 
+from base import schemas as base_schemas
+from base.authentication import BaseAuthentication
 from flask import (
     g,
     jsonify,
     request
 )
-
-from flask_app.base import schemas as base_schemas
-from flask_app.base.authentication import BaseAuthentication
-from flask_app.iam import models as iam_models
+from iam import models as iam_models
 
 
 def protected_view(view_method):
@@ -40,12 +39,13 @@ def superuser_view(view_method):
             return jsonify({'message': 'No authentication class found'}), HTTPStatus.INTERNAL_SERVER_ERROR
 
         auth = auth_class()
-        if not auth.user.is_superuser:
-            auth.authenticated = False
-            response_body = base_schemas.UnauthorizedResponseSchema(message='This endpoint is for superusers only').dict()
-            auth.response = jsonify(response_body), HTTPStatus.UNAUTHORIZED
+        if auth.user:
+            if not auth.user.is_superuser:
+                auth.authenticated = False
+                response_body = base_schemas.UnauthorizedResponseSchema(message='This endpoint is for superusers only').dict()
+                auth.response = jsonify(response_body), HTTPStatus.UNAUTHORIZED
 
-        if not auth.authenticated:
+        elif not auth.user or not auth.authenticated:
             return auth.response
 
         return view_method(*args, **kwargs)
@@ -55,6 +55,7 @@ def superuser_view(view_method):
 
 @dataclass
 class IAMTokenAuthentication(BaseAuthentication):
+    user: Optional[iam_models.User]          = None
     token: Optional[iam_models.IAMAuthToken] = None
 
     def __init__(self):
@@ -69,29 +70,31 @@ class IAMTokenAuthentication(BaseAuthentication):
         return None
 
     @classmethod
-    def validate_request(cls):
+    def validate_request(cls) -> None:
         token_key = cls._extract_request_token()
         if not token_key:
             response_body = base_schemas.UnauthorizedResponseSchema(message='missing authorization header').dict()
 
             cls.authenticated = False
-            cls.response = jsonify(response_body), HTTPStatus.UNAUTHORIZED
+            cls.response      = jsonify(response_body), HTTPStatus.UNAUTHORIZED
+            return
 
-        cls.token = iam_models.IAMAuthToken.query.filter_by(key=token_key).first()
-        if not cls.token:
+        cls.user = iam_models.User.query.filter(**{'auth_token.key': token_key}).first()
+        if not cls.user:
             response_body = base_schemas.UnauthorizedResponseSchema(message='invalid token').dict()
 
             cls.authenticated = False
-            cls.response = jsonify(response_body), HTTPStatus.UNAUTHORIZED
+            cls.response      = jsonify(response_body), HTTPStatus.UNAUTHORIZED
+            return
 
-        if cls.token:
-            cls.user = cls.token.user
-            g.user = cls.user
+        if cls.user:
+            cls.token = cls.user.token
+            g.user    = cls.user
 
             if not cls.token.is_valid:
                 response_body = base_schemas.UnauthorizedResponseSchema(message='expired token').dict()
 
                 cls.authenticated = False
-                cls.response = jsonify(response_body), HTTPStatus.UNAUTHORIZED
+                cls.response      = jsonify(response_body), HTTPStatus.UNAUTHORIZED
 
         cls.authenticated = True

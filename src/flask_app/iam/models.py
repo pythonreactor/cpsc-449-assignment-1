@@ -1,106 +1,125 @@
-import binascii
 import datetime
-import os
+import logging
+from typing import Optional
 
 import bcrypt
+from base import schemas as base_schemas
+from flask_pymongo.wrappers import Collection
+from iam import schemas
+from iam.interface import UserQueryInterface
 
-from flask_app import settings
-from flask_app.base.models import BaseFlaskModel
-from flask_app.iam import db
+from flask_app import db
+
+logger = logging.getLogger(__name__)
 
 
-class IAMAuthToken(db.Model, BaseFlaskModel):
-    __tablename__ = 'iam_auth_token'
-
-    key = db.Column(db.String(128), primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
+class IAMAuthToken(schemas.AuthTokenModel):
+    """
+    IAM Authentication Token model
+    """
 
     @classmethod
-    def generate_key(cls):
-        return binascii.hexlify(os.urandom(64)).decode()
+    @property
+    def query(cls) -> None:
+        raise NotImplementedError('Cannot directly query the IAMAuthToken model.')
 
     @property
-    def is_valid(self):
-        current_time = datetime.datetime.utcnow()
-        timeout_hours = settings.MAX_TOKEN_AGE_SECONDS / (60 ** 2)
-        token_age = current_time - self.updated_at
+    def is_valid(self) -> bool:
+        logger.info('Validating user auth token')
 
-        if token_age > datetime.timedelta(hours=timeout_hours):
-            db.session.delete(self)
-
-            try:
-                db.session.commit()
-                user = getattr(self, 'user', None)
-                if user:
-                    db.session.refresh(user)
-            except Exception:
-                db.session.rollback()
-                pass
-
+        if self.expired:
             return False
 
-        if not self.updated_at == current_time:
-            self.updated_at = current_time
-
-            try:
-                db.session.commit()
-            except Exception:
-                db.session.rollback()
-                raise
-
+        self.refresh()
         return True
 
-    @property
-    def obj_schema(self):
-        return dict(
-            key=self.key,
-            user_id=self.user_id,
-            user_email=self.user.email
-        )
+    def refresh(self) -> None:
+        """
+        Refresh the token's updated_at value to prevent it from becoming
+        stale.
+        """
+        self.updated_at = datetime.datetime.utcnow()
+
+    def delete(self) -> None:
+        raise AttributeError('Cannot directly delete an IAMAuthToken instance.')
 
     def __repr__(self):
-        return f'<{self.__class__.__name__}: {self.user.email}>'
+        return f'<{self.__class__.__name__}: {"Expired" if self.expired else "Valid"}>'
 
 
-class User(db.Model, BaseFlaskModel):
-    __tablename__ = 'user'
+class User(schemas.UserModel):
+    """
+    User model
+    """
 
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(100), unique=True, nullable=False)
-    username = db.Column(db.String(100), unique=True, nullable=False)
-    password_hash = db.Column(db.String(128), nullable=False)
-    first_name = db.Column(db.String(100), nullable=False)
-    last_name = db.Column(db.String(100), nullable=False)
+    # inventory = db.relationship('Inventory', backref='user', lazy=True, cascade='all, delete-orphan')
 
-    is_superuser = db.Column(db.Boolean, default=False)
+    @classmethod
+    @property
+    def collection(cls) -> Collection:
+        return db.users
 
-    token = db.relationship('IAMAuthToken', backref='user', lazy=True, cascade='all, delete-orphan')
-    inventory = db.relationship('Inventory', backref='user', lazy=True, cascade='all, delete-orphan')
+    @classmethod
+    @property
+    def query(cls) -> UserQueryInterface:
+        """
+        Class property to access the Model Query interface.
+        """
+        if not hasattr(cls, '_query_interface'):
+            cls._query_interface = UserQueryInterface(cls)
+
+        return cls._query_interface
 
     @property
-    def password(self):
-        raise AttributeError('password not readable')
-
-    @password.setter
-    def password(self, password):
-        self.password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-
-    def verify_password(self, password):
-        return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))
-
-    @property
-    def full_name(self):
+    def full_name(self) -> str:
         return f'{self.first_name.title()} {self.last_name.title()}'
 
     @property
-    def obj_schema(self):
-        return dict(
-            id=self.id,
-            email=self.email,
-            first_name=self.first_name,
-            last_name=self.last_name,
-            full_name=self.full_name
-        )
+    def token(self) -> Optional[IAMAuthToken]:
+        if token := self.auth_token:
+            if token.expired:
+                logger.warning('User auth token has expired.')
+
+                del self.token
+                return
+
+            return IAMAuthToken(**token.dict())
+
+    @token.setter
+    def token(self, value: Optional[IAMAuthToken]) -> None:
+        self.auth_token = value
+
+    @token.deleter
+    def token(self) -> None:
+        if self.auth_token:
+            self.auth_token = None
+            self.save()
+
+    def refresh_token(self) -> None:
+        """
+        Refresh an AuthToken's updated_at value to prevent it from becoming
+        stale/expired
+        """
+        logger.info('Refreshing user auth token.')
+
+        if not self.token or not self.token.is_valid():
+            return
+
+        self.token.refresh()
+        self.save()
+
+    def delete_token(self) -> None:
+        logger.info('Removing user auth token.')
+
+        del self.token
+        self.save()
+
+    def verify_password(self, password: str) -> str:
+        return bcrypt.checkpw(password.encode('utf-8'), self.password.encode('utf-8'))
 
     def __repr__(self):
         return f'<{self.__class__.__name__}: {self.email}>'
+
+    class Config(schemas.UserModel.Config):
+        arbitrary_types_allowed = True
+        json_encoders = {base_schemas.FIMObjectID: lambda v: str(v)}

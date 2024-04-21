@@ -9,6 +9,8 @@ from flask.wrappers import Response as FlaskResponse
 
 from flask_app.iam import models as iam_models
 
+iam_models.User = None
+
 
 @dataclass
 class BaseAuthentication(ABC):
