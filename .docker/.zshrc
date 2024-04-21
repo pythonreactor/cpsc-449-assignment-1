@@ -2,8 +2,7 @@
 export ZSH="/root/.oh-my-zsh"
 
 # Aliases
-alias flask-start='cd /code/src/flask_app; python app.py'
-alias flask-migrate='cd /code/src/flask_app; flask db migrate; flask db upgrade'
+alias flask-run='cd /code/src/flask_app; poetry run python app.py'
 
 # Set name of the theme to load
 ZSH_THEME="robbyrussell"

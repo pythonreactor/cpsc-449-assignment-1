@@ -6,8 +6,8 @@ socat TCP-LISTEN:27017,fork TCP:fim-mongo:27017 &
 # The location directly relates to where it was placed from the Dockerfile
 sh /docker-build-tools/await-db.sh
 
-# Leave the container running
-tail -f /dev/null
+# Leave the container running but don't auto-start the Flask app
+# tail -f /dev/null
 
-# Start the Flask app
-# poetry run python app.py
+# Auto-start the Flask app when the container starts
+poetry run python app.py
