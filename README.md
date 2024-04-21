@@ -19,17 +19,28 @@ you can swap `command: poetry run python app.py` with `command: tail -f /dev/nul
 and then run the following commands from inside the built app container:
 
 ```bash
-$ docker exec -it cpsc-449-1-app /bin/zsh
+$ docker exec -it fim-app /bin/zsh
 $ flask-run
 ```
 
-## Applying Migrations
+## Running a Shell in the Docker Container
 
-When making changes to the models, it is important to generate and run migrations.
+There is a script, `ipython_setup.py` that will run for you to prepare your python shell within the context of
+the Flask app. It is important to run your shell using:
 
-```bash
-$ poetry run flask db migrate
-$ poetry run flask db upgrade
+`poetry run ipython`
+
+## Querying the Database
+
+Each object has a `query` attribute tied to it for querying and handling MongoDB documents.
+
+```python
+from inventory.models import Inventory
+
+# This will return a QuerySet object that can be iterated over
+items = Inventory.query.all()
+# This will return the first document in the QuerySet
+item = items.first()
 ```
 
 ## Adding Dependencies with Poetry
@@ -44,5 +55,3 @@ $ poetry run flask db upgrade
 2. Login with the new user
 3. Copy the token received
 4. Click on the Authorize button on the top right corner and enter `Token <token>` and click Authorize
-
-![Screenshot 2024-03-18 at 00 25 09](https://github.com/pythonreactor/cpsc-449-assignment-1/assets/19892394/b12fdd94-e6b6-40d7-b5b9-0778074599c5)
