@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "iam"
+version = "3.0.0"
+description = "IAM Authentication service for the Flask Inventory Management System"
+authors = ["Michael Gilbert <mj.gilbert@csu.fullerton.edu>"]
+maintainers = ["Michael Gilbert <mj.gilbert@csu.fullerton.edu>"]
+repository = "https://github.com/pythonreactor/flask-inventory-management"
+license = "Proprietary"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+# Use poetry add <package> to add dependencies
+
+fim = { path = "fim-1.0.0.tar.gz" }
+
+python = "^3.11"
+flask = "^3.0.2"
+pydantic = {extras = ["email"], version = "^2.7"}
+flask-openapi3 = "^3.0.2"
+bcrypt = "^4.1.2"
+flask-cors = "^4.0.0"
+flask-pymongo = "^2.3.0"
+
+[tool.poetry.group.dev.dependencies]
+ipython = "^8.23.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

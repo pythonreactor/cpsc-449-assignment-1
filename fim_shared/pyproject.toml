@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "fim"
+version = "1.0.0"
+description = "Flask Inventory Management base package"
+authors = ["Michael Gilbert <mj.gilbert@csu.fullerton.edu>"]
+maintainers = ["Michael Gilbert <mj.gilbert@csu.fullerton.edu>"]
+repository = "https://github.com/pythonreactor/flask-inventory-management"
+license = "Proprietary"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+flask = "^3.0.2"
+pydantic = {extras = ["email"], version = "^2.7"}
+
+[tool.poetry.group.dev.dependencies]
+ipython = "^8.23.0"
+bson = "^0.5.10"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

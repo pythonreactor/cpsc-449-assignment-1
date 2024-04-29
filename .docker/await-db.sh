@@ -12,8 +12,6 @@ done
 
 >&2 echo "MongoDB is up - executing commands"
 
-mongosh "$MONGO_URI" --eval "disableTelemetry()"
-
 # Create the new database and add our user if it doesn't exist
 mongosh "$MONGO_URI" --username "$MONGO_USER" --password "$MONGO_PASSWORD" --eval "
     db = db.getSiblingDB('$MONGO_DB_NAME');
