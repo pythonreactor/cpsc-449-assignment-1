@@ -1,13 +1,35 @@
 services:
-  fim-flask-app:
-    container_name: fim-flask-app
+  iam-service:
+    container_name: iam-service
     build:
+      # Don't think we need the entire project?
       context: ${FIM_PROJECT_PATH}
-      dockerfile: .docker/Dockerfile
+      dockerfile: .docker/iam-service/Dockerfile
     ports:
-      - ${FLASK_PORT_EXTERNAL}:${FLASK_PORT}
+      - ${FLASK_IAM_SERVICE_PORT_EXTERNAL}:${FLASK_PORT}
     volumes:
-      - ${FIM_PROJECT_PATH}:/code
+      - ${FIM_IAM_SERVICE_VOLUME_PATH}:/code
+    depends_on:
+      - fim-mongo
+    environment:
+      - FLASK_ENV=${FLASK_ENV}
+      - MONGO_URI=${MONGO_URI}
+      - MONGO_DB_NAME=${MONGO_DB_NAME}
+      - MONGO_USER=${MONGO_USER}
+      - MONGO_PASSWORD=${MONGO_PASSWORD}
+    # Leave the container running
+    command: tail -f /dev/null
+
+  inventory-service:
+    container_name: inventory-service
+    build:
+      # Don't think we need the entire project?
+      context: ${FIM_PROJECT_PATH}
+      dockerfile: .docker/inventory-service/Dockerfile
+    ports:
+      - ${FLASK_INVENTORY_SERVICE_PORT_EXTERNAL}:${FLASK_PORT}
+    volumes:
+      - ${FIM_INVENTORY_SERVICE_VOLUME_PATH}:/code
     depends_on:
       - fim-mongo
     environment:

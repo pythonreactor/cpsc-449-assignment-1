@@ -1,0 +1,7 @@
+[virtualenvs]
+in-project = true
+path = ".venv/"
+prompt = "fim-shared"
+
+[warnings]
+export = false
