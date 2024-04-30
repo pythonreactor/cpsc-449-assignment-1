@@ -84,7 +84,7 @@ OPENAPI_APP_CONFIG = dict(
 
 # Configuration settings
 class FlaskConfig(config.Config):
-    DEBUG                = True
+    DEBUG                = DEBUG
     SECRET_KEY           = 'insecure-secret-key'
     PREFERRED_URL_SCHEME = 'http'
 

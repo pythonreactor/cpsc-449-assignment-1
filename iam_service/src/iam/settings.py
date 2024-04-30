@@ -65,12 +65,12 @@ OPENAPI_APP_CONFIG = dict(
 
 # Configuration settings
 class FlaskConfig(config.Config):
-    DEBUG = True
-    SECRET_KEY = 'insecure-secret-key'
+    DEBUG                = DEBUG
+    SECRET_KEY           = 'insecure-secret-key'
     PREFERRED_URL_SCHEME = 'http'
 
     PERMANENT_SESSION_LIFETIME = 1_800  # 30 minutes
-    SESSION_COOKIE_SECURE = True
-    # SESSION_COOKIE_SAMESITE = ''
+    SESSION_COOKIE_SECURE      = True
+    # SESSION_COOKIE_SAMESITE    = ''
 
     MONGO_URI = f'mongodb://{MONGO_USERNAME}:{MONGO_PASSWORD}@localhost:27017/{MONGO_DB_NAME}'
