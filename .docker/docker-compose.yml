@@ -32,6 +32,9 @@ services:
       - ${FIM_INVENTORY_SERVICE_VOLUME_PATH}:/code
     depends_on:
       - fim-mongo
+      - fim-redis
+      # - fim-inventory-rq-worker
+      - fim-elasticsearch
     environment:
       - FLASK_ENV=${FLASK_ENV}
       - MONGO_URI=${MONGO_URI}
@@ -53,5 +56,44 @@ services:
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
       - MONGO_INITDB_DATABASE=${MONGO_DB_NAME}
 
+  fim-redis:
+    container_name: fim-redis
+    image: redis:latest
+    ports:
+      - ${REDIS_EXTERNAL_PORT}:${REDIS_PORT}
+    volumes:
+      - ${FIM_REDIS_VOLUME_PATH}:/data
+    command:
+      - redis-server
+
+  # fim-rq-worker:
+  #   container_name: fim-rq-worker
+  #   build: .
+  #   depends_on:
+  #     - fim-redis
+  #   volumes:
+  #     - .:/code
+  #   command: rq worker --url ${REDIS_RQ_URL}
+
+  fim-elasticsearch:
+    container_name: fim-elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.0
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - xpack.security.http.ssl.enabled=false
+    ports:
+      - ${ELASTICSEARCH_API_PORT}:${ELASTICSEARCH_API_PORT}
+      - ${ELASTICSEARCH_GUI_PORT}:${ELASTICSEARCH_GUI_PORT}
+    volumes:
+      - ${FIM_ELASTICSEARCH_VOLUME_PATH}:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "${ELASTICSEARCH_API_ENDPOINT}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
 volumes:
   fim-mongo:
+  fim-redis:
+  fim-elasticsearch:

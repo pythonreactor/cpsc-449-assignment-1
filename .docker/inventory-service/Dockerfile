@@ -36,7 +36,6 @@ RUN apt-get clean && \
 
 # Install the ENV requirements
 RUN poetry config virtualenvs.create false
-RUN poetry install
 
 # Setup iPython configuration
 RUN ipython profile create

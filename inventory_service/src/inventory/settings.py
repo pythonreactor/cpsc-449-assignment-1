@@ -38,6 +38,18 @@ MONGO_INDEXES = {
 }
 
 
+# Redis settings
+REDIS_HOST = 'localhost'
+REDIS_PORT = 6379
+REDIS_DB   = 0
+
+
+# Elasticsearch settings
+ELASTICSEARCH_PORT = 9200
+ELASTICSEARCH_BASE_URL = 'http://localhost'
+ELASTICSEARCH_URL = f'{ELASTICSEARCH_BASE_URL}:{ELASTICSEARCH_PORT}'
+
+
 # External API settings
 # TODO: This should receive its own hostname after NGINX is setup
 # TODO: There should also be an interface for accessing this "external service"
@@ -72,12 +84,18 @@ OPENAPI_APP_CONFIG = dict(
 
 # Configuration settings
 class FlaskConfig(config.Config):
-    DEBUG = True
-    SECRET_KEY = 'insecure-secret-key'
+    DEBUG                = True
+    SECRET_KEY           = 'insecure-secret-key'
     PREFERRED_URL_SCHEME = 'http'
 
     PERMANENT_SESSION_LIFETIME = 1_800  # 30 minutes
-    SESSION_COOKIE_SECURE = True
-    # SESSION_COOKIE_SAMESITE = ''
+    SESSION_COOKIE_SECURE      = True
+    # SESSION_COOKIE_SAMESITE    = ''
 
     MONGO_URI = f'mongodb://{MONGO_USERNAME}:{MONGO_PASSWORD}@localhost:27017/{MONGO_DB_NAME}'
+
+    REDIS_HOST = REDIS_HOST
+    REDIS_PORT = REDIS_PORT
+    REDIS_DB   = REDIS_DB
+
+    ELASTICSEARCH_URL = ELASTICSEARCH_URL
