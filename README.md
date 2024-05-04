@@ -16,19 +16,28 @@ This application is built as a microservice. There are 2 microservices and a sha
 ## Docker Setup
 
 ```bash
-$ docker-compose build --no-cache
-$ docker-compose up -d
+$ docker-compose -p fim build --no-cache
+$ docker-compose -p fim up -d
 ```
 
 ## Running the Flask App Manually
 
 If you prefer not to auto-run the flask app in the Docker container,
 you can comment out `poetry run python app.py` and uncomment `tail -f /dev/null` in the .docker/entrypoint.sh file
-and then run the following commands from inside the built app container:
+and then connect to the service container and run the following commands from inside:
+
+### IAM Service
 
 ```bash
-$ docker exec -it fim-app /bin/bash
-$ flask-run
+$ docker exec -it iam-service /bin/bash
+$ poetry run python app.py
+```
+
+### Inventory Service
+
+```bash
+$ docker exec -it inventory-service /bin/bash
+$ poetry run python app.py
 ```
 
 ## Running a Shell in the Docker Container
