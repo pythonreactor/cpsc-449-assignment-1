@@ -5,7 +5,7 @@
 set -e
 
 echo "Waiting for MongoDB to start..."
-until mongosh "$MONGO_URI/$MONGO_DB_NAME" --eval "db.adminCommand({ ping: 1 })" > /dev/null 2>&1; do
+until mongosh "$MONGO_URI" --eval "db.adminCommand({ ping: 1 })" > /dev/null 2>&1; do
     >&2 echo "MongoDB is unavailable - sleeping"
     sleep 1
 done
