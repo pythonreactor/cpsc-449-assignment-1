@@ -27,7 +27,7 @@ you can comment out `poetry run python app.py` and uncomment `tail -f /dev/null`
 and then run the following commands from inside the built app container:
 
 ```bash
-$ docker exec -it fim-app /bin/zsh
+$ docker exec -it fim-app /bin/bash
 $ flask-run
 ```
 
