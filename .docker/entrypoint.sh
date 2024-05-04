@@ -12,7 +12,7 @@ sh /docker-build-tools/await-db.sh
 poetry install
 
 # Leave the container running but don't auto-start the Flask app
-# tail -f /dev/null
+tail -f /dev/null
 
 # Auto-start the Flask app when the container starts
-poetry run python app.py
+# poetry run python app.py

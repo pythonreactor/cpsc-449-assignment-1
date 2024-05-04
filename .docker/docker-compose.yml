@@ -88,7 +88,7 @@ services:
     volumes:
       - ${FIM_ELASTICSEARCH_VOLUME_PATH}:/usr/share/elasticsearch/data
     healthcheck:
-      test: ["CMD", "curl", "-f", "${ELASTICSEARCH_API_ENDPOINT}"]
+      test: ["CMD", "curl", "-f", "${ELASTICSEARCH_HEALTH_ENDPOINT}"]
       interval: 30s
       timeout: 10s
       retries: 5
