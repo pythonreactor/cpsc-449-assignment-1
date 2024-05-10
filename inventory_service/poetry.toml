@@ -5,3 +5,6 @@ prompt = "fim-inventory"
 
 [warnings]
 export = false
+
+[tool.poetry.dependencies]
+redis = "^4.5.5"
