@@ -35,6 +35,7 @@ from inventory.schemas import (
     InventoryListResponseSchema
 )
 from inventory.tags import inventory_tag
+from inventory.redis_client import redis_client  # Add this line
 
 logger = logging.getLogger(__name__)
 api_view_v1 = APIView(url_prefix='/api/v1')
@@ -48,7 +49,7 @@ class InventoryCreateAPI(BaseCreateAPI):
     authentication_class = TokenAuthentication
 
     request_body_schema = InventoryCreateRequestSchema
-    response_schema     = InventoryCreateResponseSchema
+    response_schema = InventoryCreateResponseSchema
 
     model = models.Inventory
 
@@ -66,7 +67,10 @@ class InventoryCreateAPI(BaseCreateAPI):
     )
     @protected_view
     def post(self, body: request_body_schema):
-        return super().post(body)
+        response = super().post(body)
+        if response.status_code == HTTPStatus.CREATED:
+            redis_client.delete("all_inventory_items")  # Invalidate cache
+        return response
 
 
 @api_view_v1.route('/inventory/create/bulk')
@@ -77,7 +81,7 @@ class InventoryBulkCreateAPI(BaseBulkCreateAPI):
     authentication_class = TokenAuthentication
 
     request_body_schema = InventoryBulkCreateRequestSchema
-    response_schema     = InventoryBulkCreateResponseSchema
+    response_schema = InventoryBulkCreateResponseSchema
 
     model = models.Inventory
 
@@ -95,7 +99,10 @@ class InventoryBulkCreateAPI(BaseBulkCreateAPI):
     )
     @protected_view
     def post(self, body: request_body_schema):
-        return super().post(body)
+        response = super().post(body)
+        if response.status_code == HTTPStatus.CREATED:
+            redis_client.delete("all_inventory_items")  # Invalidate cache
+        return response
 
 
 @api_view_v1.route('/inventory/items')
@@ -106,7 +113,7 @@ class InventoryListAPI(BaseListAPI):
     authentication_class = TokenAuthentication
 
     request_query_schema = InventoryListQuerySchema
-    response_schema      = InventoryListResponseSchema
+    response_schema = InventoryListResponseSchema
 
     model = models.Inventory
 
@@ -124,7 +131,18 @@ class InventoryListAPI(BaseListAPI):
     )
     @protected_view
     def get(self, query: request_query_schema):
-        return super().get(query)
+        cache_key = "all_inventory_items"
+        cached_items = redis_client.get(cache_key)
+
+        if cached_items:
+            return jsonify(eval(cached_items)), HTTPStatus.OK
+
+        response = super().get(query)
+
+        if response.status_code == HTTPStatus.OK:
+            redis_client.setex(cache_key, 300, str(response.get_json()))  # Cache for 5 minutes
+
+        return response
 
 
 @api_view_v1.route('/inventory/items/<id>')
@@ -135,11 +153,11 @@ class InventoryDetailAPI(BaseDetailAPI):
     authentication_class = TokenAuthentication
 
     request_query_schema = InventoryDetailQuerySchema
-    request_body_schema  = InventoryDetailRequestSchema
-    response_schema      = InventoryDetailResponseSchema
+    request_body_schema = InventoryDetailRequestSchema
+    response_schema = InventoryDetailResponseSchema
 
     delete_request_query_schema = InventoryDeleteQuerySchema
-    delete_response_schema      = InventoryDeleteResponseSchema
+    delete_response_schema = InventoryDeleteResponseSchema
 
     model = models.Inventory
 
@@ -157,7 +175,18 @@ class InventoryDetailAPI(BaseDetailAPI):
     )
     @protected_view
     def get(self, query: request_query_schema):
-        return super().get(query)
+        cache_key = f"inventory_item:{query.id}"
+        cached_item = redis_client.get(cache_key)
+
+        if cached_item:
+            return jsonify(eval(cached_item)), HTTPStatus.OK
+
+        response = super().get(query)
+
+        if response.status_code == HTTPStatus.OK:
+            redis_client.setex(cache_key, 300, str(response.get_json()))  # Cache for 5 minutes
+
+        return response
 
     @api_view_v1.doc(
         tags=[inventory_tag],
@@ -173,7 +202,13 @@ class InventoryDetailAPI(BaseDetailAPI):
     )
     @protected_view
     def patch(self, query: request_query_schema, body: request_body_schema):
-        return super().patch(query, body)
+        cache_key = f"inventory_item:{query.id}"
+        response = super().patch(query, body)
+
+        if response.status_code == HTTPStatus.OK:
+            redis_client.setex(cache_key, 300, str(response.get_json()))  # Cache for 5 minutes
+
+        return response
 
     @api_view_v1.doc(
         tags=[inventory_tag],
@@ -189,7 +224,13 @@ class InventoryDetailAPI(BaseDetailAPI):
     )
     @protected_view
     def delete(self, query: request_query_schema):
-        return super().delete(query)
+        cache_key = f"inventory_item:{query.id}"
+        response = super().delete(query)
+
+        if response.status_code == HTTPStatus.RESET_CONTENT:
+            redis_client.delete(cache_key)
+
+        return response
 
 
 @api_view_v1.route('/inventory/items/delete/bulk')
@@ -200,7 +241,7 @@ class InventoryBulkDeleteAPI(BaseBulkDeleteAPI):
     authentication_class = TokenAuthentication
 
     request_body_schema = InventoryBulkDeleteRequestSchema
-    response_schema     = InventoryBulkDeleteResponseSchema
+    response_schema = InventoryBulkDeleteResponseSchema
 
     model = models.Inventory
 
@@ -218,4 +259,9 @@ class InventoryBulkDeleteAPI(BaseBulkDeleteAPI):
     )
     @protected_view
     def delete(self, body: request_body_schema):
-        return super().delete(body)
+        response = super().delete(body)
+
+        if response.status_code == HTTPStatus.RESET_CONTENT:
+            redis_client.delete("all_inventory_items")  # Invalidate cache for inventory list
+
+        return response
