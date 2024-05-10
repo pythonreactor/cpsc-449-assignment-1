@@ -47,6 +47,7 @@ from iam.tags import (
     superuser_tag
 )
 from iam.utils import login_user
+from iam.redis_client import redis_client #redis
 
 logger      = logging.getLogger(__name__)
 internal_api_v1 = APIView(url_prefix='/api/v1')
@@ -100,14 +101,34 @@ class LoginAPI:
         security=None
     )
     def post(self, body: LoginRequestSchema):
-        user = models.User.query.find_by_email(email=body.email)
+        # user = models.User.query.find_by_email(email=body.email)
+        # if not user:
+        #     return jsonify(NotFoundResponseSchema(message='user not found').dict()), HTTPStatus.NOT_FOUND
+
+        # if not user.verify_password(body.password):
+        #     return jsonify(BadRequestResponseSchema(message='invalid password').dict()), HTTPStatus.BAD_REQUEST
+
+        # token              = login_user(user)
+        # session['user_id'] = str(user.id)
+
+        # return jsonify(LoginResponseSchema(message='auth token generated', email=user.email, token=token.key).dict()), HTTPStatus.OK
+        cache_key = f"user:{body.email}"
+        cached_user = redis_client.get(cache_key)
+
+        if cached_user:
+            user = models.User(**eval(cached_user))
+        else:
+            user = models.User.query.find_by_email(email=body.email)
+
         if not user:
             return jsonify(NotFoundResponseSchema(message='user not found').dict()), HTTPStatus.NOT_FOUND
 
         if not user.verify_password(body.password):
             return jsonify(BadRequestResponseSchema(message='invalid password').dict()), HTTPStatus.BAD_REQUEST
 
-        token              = login_user(user)
+        redis_client.setex(cache_key, 300, str(user.model_dump()))  # Cache for 5 minutes
+
+        token = login_user(user)
         session['user_id'] = str(user.id)
 
         return jsonify(LoginResponseSchema(message='auth token generated', email=user.email, token=token.key).dict()), HTTPStatus.OK
@@ -137,8 +158,21 @@ class UserListAPI(BaseListAPI):
         security=settings.API_TOKEN_SECURITY
     )
     @protected_view
+    # def get(self, query: request_query_schema):
+    #     return super().get(query)
     def get(self, query: request_query_schema):
-        return super().get(query)
+        cache_key = "all_users"
+        cached_users = redis_client.get(cache_key)
+
+        if cached_users:
+            return jsonify(eval(cached_users)), HTTPStatus.OK
+
+        response = super().get(query)
+
+        if response.status_code == HTTPStatus.OK:
+            redis_client.setex(cache_key, 300, str(response.get_json()))  # Cache for 5 minutes
+
+        return response
 
 
 @internal_api_v1.route('/users/<id>')
@@ -187,8 +221,21 @@ class UserDetailAPI(BaseDetailAPI):
         security=settings.API_TOKEN_SECURITY
     )
     @protected_view
-    def patch(self, query: request_query_schema, body: request_body_schema):
-        return super().patch(query, body)
+    # def patch(self, query: request_query_schema, body: request_body_schema):
+    #     return super().patch(query, body)
+    def get(self, query: request_query_schema):
+        cache_key = f"user:{query.id}"
+        cached_user = redis_client.get(cache_key)
+
+        if cached_user:
+            return jsonify(eval(cached_user)), HTTPStatus.OK
+
+        response = super().get(query)
+
+        if response.status_code == HTTPStatus.OK:
+            redis_client.setex(cache_key, 300, str(response.get_json()))  # Cache for 5 minutes
+
+        return response
 
     @internal_api_v1.doc(
         tags=[superuser_tag],
@@ -203,8 +250,16 @@ class UserDetailAPI(BaseDetailAPI):
         security=settings.API_TOKEN_SECURITY
     )
     @superuser_view
+    # def delete(self, query: delete_request_query_schema):
+    #     return super().delete(query)
     def delete(self, query: delete_request_query_schema):
-        return super().delete(query)
+        cache_key = f"user:{query.id}"
+        response = super().delete(query)
+
+        if response.status_code == HTTPStatus.RESET_CONTENT:
+            redis_client.delete(cache_key)
+
+        return response
 
 
 @internal_api_v1.route('/users/delete/bulk')
@@ -232,8 +287,15 @@ class UserBulkDeleteAPI(BaseBulkDeleteAPI):
         security=settings.API_TOKEN_SECURITY
     )
     @superuser_view
+    # def delete(self, body: request_body_schema):
+    #     return super().delete(body)
     def delete(self, body: request_body_schema):
-        return super().delete(body)
+        response = super().delete(body)
+
+        if response.status_code == HTTPStatus.RESET_CONTENT:
+            redis_client.delete("all_users")  # Invalidate cache for user list
+
+        return response
 
 # endregion
 
