@@ -47,9 +47,9 @@ from iam.tags import (
     superuser_tag
 )
 from iam.utils import login_user
-from iam.redis_client import redis_client #redis
+from iam.redis_client import redis_client  # Added Redis import
 
-logger      = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 internal_api_v1 = APIView(url_prefix='/api/v1')
 external_api_v1 = APIView(url_prefix='/api/v1/iam')
 
@@ -101,17 +101,6 @@ class LoginAPI:
         security=None
     )
     def post(self, body: LoginRequestSchema):
-        # user = models.User.query.find_by_email(email=body.email)
-        # if not user:
-        #     return jsonify(NotFoundResponseSchema(message='user not found').dict()), HTTPStatus.NOT_FOUND
-
-        # if not user.verify_password(body.password):
-        #     return jsonify(BadRequestResponseSchema(message='invalid password').dict()), HTTPStatus.BAD_REQUEST
-
-        # token              = login_user(user)
-        # session['user_id'] = str(user.id)
-
-        # return jsonify(LoginResponseSchema(message='auth token generated', email=user.email, token=token.key).dict()), HTTPStatus.OK
         cache_key = f"user:{body.email}"
         cached_user = redis_client.get(cache_key)
 
@@ -142,7 +131,7 @@ class UserListAPI(BaseListAPI):
     authentication_class = IAMTokenAuthentication
 
     request_query_schema = UserListQuerySchema
-    response_schema      = UserListResponseSchema
+    response_schema = UserListResponseSchema
 
     model = models.User
 
@@ -158,8 +147,6 @@ class UserListAPI(BaseListAPI):
         security=settings.API_TOKEN_SECURITY
     )
     @protected_view
-    # def get(self, query: request_query_schema):
-    #     return super().get(query)
     def get(self, query: request_query_schema):
         cache_key = "all_users"
         cached_users = redis_client.get(cache_key)
@@ -183,11 +170,11 @@ class UserDetailAPI(BaseDetailAPI):
     authentication_class = IAMTokenAuthentication
 
     request_query_schema = UserDetailQuerySchema
-    request_body_schema  = UserDetailRequestSchema
-    response_schema      = UserDetailResponseSchema
+    request_body_schema = UserDetailRequestSchema
+    response_schema = UserDetailResponseSchema
 
     delete_request_query_schema = UserDeleteQuerySchema
-    delete_response_schema      = UserDeleteResponseSchema
+    delete_response_schema = UserDeleteResponseSchema
 
     model = models.User
 
@@ -205,7 +192,18 @@ class UserDetailAPI(BaseDetailAPI):
     )
     @protected_view
     def get(self, query: request_query_schema):
-        return super().get(query)
+        cache_key = f"user:{query.id}"
+        cached_user = redis_client.get(cache_key)
+
+        if cached_user:
+            return jsonify(eval(cached_user)), HTTPStatus.OK
+
+        response = super().get(query)
+
+        if response.status_code == HTTPStatus.OK:
+            redis_client.setex(cache_key, 300, str(response.get_json()))  # Cache for 5 minutes
+
+        return response
 
     @internal_api_v1.doc(
         tags=[iam_tag],
@@ -221,16 +219,9 @@ class UserDetailAPI(BaseDetailAPI):
         security=settings.API_TOKEN_SECURITY
     )
     @protected_view
-    # def patch(self, query: request_query_schema, body: request_body_schema):
-    #     return super().patch(query, body)
-    def get(self, query: request_query_schema):
+    def patch(self, query: request_query_schema, body: request_body_schema):
         cache_key = f"user:{query.id}"
-        cached_user = redis_client.get(cache_key)
-
-        if cached_user:
-            return jsonify(eval(cached_user)), HTTPStatus.OK
-
-        response = super().get(query)
+        response = super().patch(query, body)
 
         if response.status_code == HTTPStatus.OK:
             redis_client.setex(cache_key, 300, str(response.get_json()))  # Cache for 5 minutes
@@ -250,8 +241,6 @@ class UserDetailAPI(BaseDetailAPI):
         security=settings.API_TOKEN_SECURITY
     )
     @superuser_view
-    # def delete(self, query: delete_request_query_schema):
-    #     return super().delete(query)
     def delete(self, query: delete_request_query_schema):
         cache_key = f"user:{query.id}"
         response = super().delete(query)
@@ -270,7 +259,7 @@ class UserBulkDeleteAPI(BaseBulkDeleteAPI):
     authentication_class = IAMTokenAuthentication
 
     request_body_schema = UserBulkDeleteRequestSchema
-    response_schema     = UserBulkDeleteResponseSchema
+    response_schema = UserBulkDeleteResponseSchema
 
     model = models.User
 
@@ -287,8 +276,6 @@ class UserBulkDeleteAPI(BaseBulkDeleteAPI):
         security=settings.API_TOKEN_SECURITY
     )
     @superuser_view
-    # def delete(self, body: request_body_schema):
-    #     return super().delete(body)
     def delete(self, body: request_body_schema):
         response = super().delete(body)
 
@@ -314,13 +301,13 @@ class ExternalAuthenticationAPI:
         if not auth_response.authenticated:
             return auth_response.response
 
-        user_obj        = auth_response.user
-        user_data       = user_obj.model_dump()
+        user_obj = auth_response.user
+        user_data = user_obj.model_dump()
         # NOTE: Force the MongoDB ObjectID into the response so the calling service
         # can use it for document referencing
         user_data['id'] = str(user_obj.id)
 
-        token_obj  = auth_response.token
+        token_obj = auth_response.token
         token_data = token_obj.model_dump()
 
         response_body = self.response_schema(user=user_data, token=token_data)
