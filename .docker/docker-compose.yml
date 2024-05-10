@@ -44,6 +44,19 @@ services:
     # Leave the container running
     command: tail -f /dev/null
 
+  nginx:
+    container_name: fim-nginx
+    image: nginx:latest
+    #build: ./nginx
+    ports:
+    - "8080:80"
+    volumes:
+    - "./nginx/nginx.conf:/etc/nginx/nginx.conf"
+    depends_on:
+    - iam-service
+    - inventory-service
+    restart: always
+
   fim-mongo:
     container_name: fim-mongo
     image: mongo:latest
