@@ -41,6 +41,7 @@ services:
       - MONGO_DB_NAME=${MONGO_DB_NAME}
       - MONGO_USER=${MONGO_USER}
       - MONGO_PASSWORD=${MONGO_PASSWORD}
+      - REDIS_URL=redis://fim-redis:${REDIS_PORT}
     # Leave the container running
     command: tail -f /dev/null
 
