@@ -1,6 +1,5 @@
 FROM python:3.11-slim-bookworm
 
-ENV PORT 5000
 ENV PYTHONUNBUFFERED 1
 
 # Install system dependencies
