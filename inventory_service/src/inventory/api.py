@@ -1,18 +1,20 @@
-import logging
 from http import HTTPStatus
+from typing import Tuple
 
 from fim.api import (
     BaseBulkCreateAPI,
     BaseBulkDeleteAPI,
     BaseCreateAPI,
     BaseDetailAPI,
-    BaseListAPI
+    BaseListAPI,
+    BaseSearchAPI
 )
 from fim.authentication import protected_view
 from fim.schemas import (
     BadRequestResponseSchema,
     UnauthorizedResponseSchema
 )
+from flask import jsonify
 from flask_openapi3 import APIView
 from inventory import (
     models,
@@ -32,15 +34,18 @@ from inventory.schemas import (
     InventoryDetailRequestSchema,
     InventoryDetailResponseSchema,
     InventoryListQuerySchema,
-    InventoryListResponseSchema
+    InventoryListResponseSchema,
+    InventorySearchQuerySchema,
+    InventorySearchResponseSchema
 )
 from inventory.tags import inventory_tag
 
-logger = logging.getLogger(__name__)
-api_view_v1 = APIView(url_prefix='/api/v1')
+logger               = settings.getLogger(__name__)
+service_api_v1       = APIView(url_prefix='/api/v1/inventory')
+inventory_item_index = settings.ELASTICSEARCH_INDEX_NAME
 
 
-@api_view_v1.route('/inventory/create')
+@service_api_v1.route('/create')
 class InventoryCreateAPI(BaseCreateAPI):
     """
     API endpoint for creating an inventory item
@@ -51,8 +56,9 @@ class InventoryCreateAPI(BaseCreateAPI):
     response_schema     = InventoryCreateResponseSchema
 
     model = models.Inventory
+    index = inventory_item_index
 
-    @api_view_v1.doc(
+    @service_api_v1.doc(
         tags=[inventory_tag],
         operation_id='Inventory Create API POST',
         summary='Create inventory item',
@@ -69,7 +75,7 @@ class InventoryCreateAPI(BaseCreateAPI):
         return super().post(body)
 
 
-@api_view_v1.route('/inventory/create/bulk')
+@service_api_v1.route('/create/bulk')
 class InventoryBulkCreateAPI(BaseBulkCreateAPI):
     """
     API endpoint for creating multiple inventory items
@@ -80,8 +86,9 @@ class InventoryBulkCreateAPI(BaseBulkCreateAPI):
     response_schema     = InventoryBulkCreateResponseSchema
 
     model = models.Inventory
+    index = inventory_item_index
 
-    @api_view_v1.doc(
+    @service_api_v1.doc(
         tags=[inventory_tag],
         operation_id='Inventory Bulk Create API POST',
         summary='Create many inventory items',
@@ -94,11 +101,11 @@ class InventoryBulkCreateAPI(BaseBulkCreateAPI):
         security=settings.API_TOKEN_SECURITY
     )
     @protected_view
-    def post(self, body: request_body_schema):
+    def post(self, body: request_body_schema) -> Tuple[jsonify, HTTPStatus]:
         return super().post(body)
 
 
-@api_view_v1.route('/inventory/items')
+@service_api_v1.route('/items')
 class InventoryListAPI(BaseListAPI):
     """
     API endpoint for listing inventory items
@@ -110,7 +117,7 @@ class InventoryListAPI(BaseListAPI):
 
     model = models.Inventory
 
-    @api_view_v1.doc(
+    @service_api_v1.doc(
         tags=[inventory_tag],
         operation_id='Inventory List API GET',
         summary='List inventory items',
@@ -123,11 +130,11 @@ class InventoryListAPI(BaseListAPI):
         security=settings.API_TOKEN_SECURITY
     )
     @protected_view
-    def get(self, query: request_query_schema):
+    def get(self, query: request_query_schema) -> Tuple[jsonify, HTTPStatus]:
         return super().get(query)
 
 
-@api_view_v1.route('/inventory/items/<id>')
+@service_api_v1.route('/items/<id>')
 class InventoryDetailAPI(BaseDetailAPI):
     """
     API endpoint for viewing or updating a single inventory item
@@ -142,8 +149,9 @@ class InventoryDetailAPI(BaseDetailAPI):
     delete_response_schema      = InventoryDeleteResponseSchema
 
     model = models.Inventory
+    index = inventory_item_index
 
-    @api_view_v1.doc(
+    @service_api_v1.doc(
         tags=[inventory_tag],
         operation_id='Inventory Detail API GET',
         summary='Inventory detail endpoint',
@@ -156,10 +164,10 @@ class InventoryDetailAPI(BaseDetailAPI):
         security=settings.API_TOKEN_SECURITY
     )
     @protected_view
-    def get(self, query: request_query_schema):
+    def get(self, query: request_query_schema) -> Tuple[jsonify, HTTPStatus]:
         return super().get(query)
 
-    @api_view_v1.doc(
+    @service_api_v1.doc(
         tags=[inventory_tag],
         operation_id='Inventory Detail API PATCH',
         summary='Inventory detail endpoint',
@@ -172,10 +180,10 @@ class InventoryDetailAPI(BaseDetailAPI):
         security=settings.API_TOKEN_SECURITY
     )
     @protected_view
-    def patch(self, query: request_query_schema, body: request_body_schema):
+    def patch(self, query: request_query_schema, body: request_body_schema) -> Tuple[jsonify, HTTPStatus]:
         return super().patch(query, body)
 
-    @api_view_v1.doc(
+    @service_api_v1.doc(
         tags=[inventory_tag],
         operation_id='Inventory Delete API DELETE',
         summary='Inventory delete endpoint',
@@ -188,11 +196,41 @@ class InventoryDetailAPI(BaseDetailAPI):
         security=settings.API_TOKEN_SECURITY
     )
     @protected_view
-    def delete(self, query: request_query_schema):
+    def delete(self, query: request_query_schema) -> Tuple[jsonify, HTTPStatus]:
         return super().delete(query)
 
 
-@api_view_v1.route('/inventory/items/delete/bulk')
+@service_api_v1.route('/items/search')
+class InventorySearchAPI(BaseSearchAPI):
+    """
+    API endpoint for searching inventory items
+    """
+    authentication_class = TokenAuthentication
+
+    request_query_schema = InventorySearchQuerySchema
+    response_schema      = InventorySearchResponseSchema
+
+    model = models.Inventory
+    index = inventory_item_index
+
+    @service_api_v1.doc(
+        tags=[inventory_tag],
+        operation_id='Inventory Search API POST',
+        summary='Inventory search endpoint',
+        description='This endpoint is used to search for inventory items in Elasticsearch.',
+        responses={
+            HTTPStatus.OK: response_schema,
+            HTTPStatus.BAD_REQUEST: BadRequestResponseSchema,
+            HTTPStatus.UNAUTHORIZED: UnauthorizedResponseSchema
+        },
+        security=settings.API_TOKEN_SECURITY
+    )
+    @protected_view
+    def get(self, query: request_query_schema) -> Tuple[jsonify, HTTPStatus]:
+        return super().get(query)
+
+
+@service_api_v1.route('/items/delete/bulk')
 class InventoryBulkDeleteAPI(BaseBulkDeleteAPI):
     """
     API endpoint for deleting many inventory objects
@@ -203,8 +241,9 @@ class InventoryBulkDeleteAPI(BaseBulkDeleteAPI):
     response_schema     = InventoryBulkDeleteResponseSchema
 
     model = models.Inventory
+    index = inventory_item_index
 
-    @api_view_v1.doc(
+    @service_api_v1.doc(
         tags=[inventory_tag],
         operation_id='Inventory Bulk Delete API DELETE',
         summary='Inventory bulk delete endpoint',
@@ -217,5 +256,5 @@ class InventoryBulkDeleteAPI(BaseBulkDeleteAPI):
         security=settings.API_TOKEN_SECURITY
     )
     @protected_view
-    def delete(self, body: request_body_schema):
+    def delete(self, body: request_body_schema) -> Tuple[jsonify, HTTPStatus]:
         return super().delete(body)

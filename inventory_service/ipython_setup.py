@@ -17,7 +17,8 @@ from werkzeug.local import LocalProxy
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-app.config['MONGO_URI'] = settings.FlaskConfig.MONGO_URI
+app.config['MONGO_URI']         = settings.FlaskConfig.MONGO_URI
+app.config['ELASTICSEARCH_URL'] = settings.ELASTICSEARCH_URL
 
 
 def setup_database_indexes(database: PyMongo):

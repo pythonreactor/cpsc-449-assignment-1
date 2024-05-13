@@ -1,4 +1,3 @@
-import logging
 from typing import (
     List,
     Optional
@@ -7,13 +6,14 @@ from typing import (
 from fim import models as base_models
 from fim import schemas as base_schemas
 from inventory import constants as inventory_constants
+from inventory import settings
 from pydantic import (
     BaseModel,
     Field,
     validator
 )
 
-logger = logging.getLogger(__name__)
+logger = settings.getLogger(__name__)
 
 
 # region Model schemas
@@ -131,6 +131,20 @@ class InventoryBulkDeleteRequestSchema(base_schemas.BaseBulkDeleteRequestSchema)
 
 class InventoryBulkDeleteResponseSchema(base_schemas.BaseBulkDeleteResponseSchema):
     ...
+
+# endregion
+
+
+# region Inventory Search schemas
+
+class InventorySearchQuerySchema(base_schemas.BaseSearchQuerySchema):
+    name: str = Field(None, description='Items with "name" containing or matching the string')
+    category: str = Field(None, description='Items with "category" containing or matching the string')
+
+
+class InventorySearchResponseSchema(base_schemas.BaseSearchResponseSchema):
+    data: List[InventoryObjectResponseSchema]
+    pagination: base_schemas.BasePaginationResponseSchema
 
 # endregion
 

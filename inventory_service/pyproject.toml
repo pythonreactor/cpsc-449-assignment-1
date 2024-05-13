@@ -11,7 +11,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 # Use poetry add <package> to add dependencies
 
-fim = { path = "fim-1.0.0.tar.gz" }
+fim = { path = "fim-2.0.1.tar.gz" }
 
 python = "^3.11"
 flask = "^3.0.2"
@@ -23,6 +23,7 @@ requests = "^2.31.0"
 redis = "^5.0.4"
 rq = "^1.16.1"
 elasticsearch = "^8.13.0"
+rq-dashboard = "^0.7.0.2"
 
 [tool.poetry.group.dev.dependencies]
 ipython = "^8.23.0"
