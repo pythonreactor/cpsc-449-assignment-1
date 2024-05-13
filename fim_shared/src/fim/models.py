@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import datetime
-import logging
 from abc import abstractmethod
 from typing import (
     TYPE_CHECKING,
@@ -9,15 +8,19 @@ from typing import (
     Type
 )
 
-from fim import schemas
+from fim import (
+    schemas,
+    settings
+)
 from fim.interface import (
+    ElasticsearchQueryInterface,
     QueryInterface,
     T
 )
 from flask_pymongo.wrappers import Collection
 from pymongo import errors
 
-logger = logging.getLogger(__name__)
+logger = settings.getLogger(__name__)
 
 
 if TYPE_CHECKING:
@@ -44,6 +47,20 @@ class BaseFlaskModel(schemas.BaseModelSchema):
 
     @classmethod
     @property
+    def index(cls) -> str:
+        """
+        Class property to return the model's Elasticsearch index name.
+        """
+        module = cls.__module__.split('.')[0]
+        uses_es = getattr(__import__(f'{module}.settings', fromlist=['*']), 'ELASTICSEARCH_INDEXES', None)
+
+        if not uses_es:
+            raise NotImplementedError('This service does not utilize Elasticsearch')
+
+        return cls.__name__.lower()
+
+    @classmethod
+    @property
     def query(cls: Type[T]) -> QueryInterface:
         """
         Class property to access the Model Query interface.
@@ -52,6 +69,17 @@ class BaseFlaskModel(schemas.BaseModelSchema):
             cls._query_interface = QueryInterface(cls)
 
         return cls._query_interface
+
+    @classmethod
+    @property
+    def es_query(cls: Type[T]) -> ElasticsearchQueryInterface:
+        """
+        Class property to access the Model Elasticsearch Query interface.
+        """
+        if not hasattr(cls, '_es_query_interface'):
+            cls._es_query_interface = ElasticsearchQueryInterface(cls)
+
+        return cls._es_query_interface
 
     @classmethod
     def __next_pk(cls) -> int:
@@ -120,6 +148,24 @@ class BaseFlaskModel(schemas.BaseModelSchema):
             return None
 
         self = self.__class__(**document)
+
+    def add_to_index(self, index: str) -> None:
+        """
+        Add the document to the search index.
+        """
+        raise NotImplementedError('Method not implemented')
+
+    def update_index(self, index: str) -> None:
+        """
+        Update a document in the search index.
+        """
+        raise NotImplementedError('Method not implemented')
+
+    def remove_from_index(self, index: str) -> None:
+        """
+        Remove a document from the search index.
+        """
+        raise NotImplementedError('Method not implemented')
 
     def save(self):
         """
