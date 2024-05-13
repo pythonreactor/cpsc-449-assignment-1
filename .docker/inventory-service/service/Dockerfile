@@ -43,7 +43,7 @@ RUN echo "c.InteractiveShellApp.exec_files = ['/code/ipython_setup.py']" >> /roo
 WORKDIR /code/src/inventory
 
 RUN mkdir /docker-build-tools
-COPY .docker/inventory-service/entrypoint.sh /docker-build-tools/entrypoint.sh
+COPY .docker/entrypoint.sh /docker-build-tools/entrypoint.sh
 COPY .docker/await-db.sh /docker-build-tools/await-db.sh
 COPY .docker/inventory-service/await-es.sh /docker-build-tools/await-es.sh
 

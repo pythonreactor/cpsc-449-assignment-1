@@ -16,5 +16,5 @@ poetry install
 # Leave the container running but don't auto-start the Flask app
 # tail -f /dev/null
 
-# Auto-start the Flask app when the container starts
-poetry run python app.py
+# Auto-start the RQ worker Flask app when the container starts
+poetry run python worker.py

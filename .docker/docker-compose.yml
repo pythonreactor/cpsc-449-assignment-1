@@ -18,7 +18,7 @@ services:
   inventory-service:
     build:
       context: ${FIM_PROJECT_PATH}
-      dockerfile: .docker/inventory-service/Dockerfile
+      dockerfile: .docker/inventory-service/service/Dockerfile
     volumes:
       - ${FIM_INVENTORY_SERVICE_VOLUME_PATH}:/code
     environment:
@@ -62,9 +62,16 @@ services:
     container_name: fim-inventory-rq-worker
     build:
       context: ${FIM_PROJECT_PATH}
-      dockerfile: .docker/inventory-service/Dockerfile
+      dockerfile: .docker/inventory-service/rq/Dockerfile
     volumes:
       - ${FIM_INVENTORY_SERVICE_PATH}:/code
+    environment:
+      - FLASK_ENV=${FLASK_ENV}
+      - MONGO_URI=${MONGO_URI}
+      - MONGO_DB_NAME=${MONGO_DB_NAME}
+      - MONGO_USER=${MONGO_USER}
+      - MONGO_PASSWORD=${MONGO_PASSWORD}
+      - ELASTICSEARCH_HEALTH_ENDPOINT=${ELASTICSEARCH_HEALTH_ENDPOINT}
     depends_on:
       - fim-redis
       - inventory-service
