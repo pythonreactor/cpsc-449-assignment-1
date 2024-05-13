@@ -9,6 +9,7 @@ from flask import (
 )
 from flask_pymongo import PyMongo
 from iam import settings
+from redis import Redis
 from werkzeug.local import LocalProxy
 
 logger = logging.getLogger(__name__)
@@ -48,12 +49,34 @@ def get_db():
     return db
 
 
-db = LocalProxy(get_db)
+def get_redis_conn():
+    """
+    Configuration method to return Redis instance
+    """
+    redis_conn = getattr(g, '_redis_conn', None)
+
+    if redis_conn is None:
+        redis_conn = g._redis = Redis(
+            host=settings.REDIS_HOST,
+            port=settings.REDIS_PORT,
+            db=settings.REDIS_DB,
+            decode_responses=True
+        )
+
+    return redis_conn
+
+
+db    = LocalProxy(get_db)
+cache = LocalProxy(get_redis_conn)
 
 
 @app.shell_context_processor
 def make_shell_context():
-    return {'db': db, 'app': app}
+    return {
+        'db': db,
+        'cache': cache,
+        'app': app
+    }
 
 
 ctx = app.app_context()

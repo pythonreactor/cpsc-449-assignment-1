@@ -43,6 +43,15 @@ MONGO_INDEXES = {
 }
 
 
+# Redis settings
+REDIS_HOST = 'localhost'
+REDIS_PORT = 6379
+REDIS_DB   = 0
+
+SERVICE_CACHE_PREFIX     = 'iam'
+SERVICE_CACHE_EXPIRATION = 1_800  # 30 minutes
+
+
 # CORS settings
 CORS_RESOURCES = {r'/api/v1/iam/*': {'origins': f'http://localhost:{PORT}'}}
 
