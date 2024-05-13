@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fim"
-version = "1.0.0"
+version = "2.0.1"
 description = "Flask Inventory Management base package"
 authors = ["Michael Gilbert <mj.gilbert@csu.fullerton.edu>"]
 maintainers = ["Michael Gilbert <mj.gilbert@csu.fullerton.edu>"]

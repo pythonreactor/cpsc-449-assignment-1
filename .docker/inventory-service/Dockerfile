@@ -1,11 +1,10 @@
 FROM python:3.11-slim-bookworm
 
-ENV PORT 5000
 ENV PYTHONUNBUFFERED 1
 
 # Install system dependencies
 RUN apt update && \
-    apt install -y git curl gnupg lsb-release \
+    apt install -y git curl jq gnupg lsb-release \
     build-essential libjpeg-dev libpng-dev libtiff-dev \
     socat
 
@@ -44,8 +43,9 @@ RUN echo "c.InteractiveShellApp.exec_files = ['/code/ipython_setup.py']" >> /roo
 WORKDIR /code/src/inventory
 
 RUN mkdir /docker-build-tools
-COPY .docker/entrypoint.sh /docker-build-tools/entrypoint.sh
+COPY .docker/inventory-service/entrypoint.sh /docker-build-tools/entrypoint.sh
 COPY .docker/await-db.sh /docker-build-tools/await-db.sh
+COPY .docker/inventory-service/await-es.sh /docker-build-tools/await-es.sh
 
 # Clean up stagnant files/data
 RUN apt-get clean && \

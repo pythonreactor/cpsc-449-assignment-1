@@ -1,18 +1,23 @@
 from __future__ import annotations
 
-import logging
 from typing import (
     TYPE_CHECKING,
     Dict
 )
 
 from flask_pymongo.wrappers import Collection
+from inventory import redis_queue as queue
 from inventory import (
     schemas,
     settings
 )
+from inventory.tasks import (
+    add_item_to_index,
+    delete_item_in_index,
+    update_item_in_index
+)
 
-logger = logging.getLogger(__name__)
+logger = settings.getLogger(__name__)
 
 
 if TYPE_CHECKING:
@@ -55,6 +60,30 @@ class Inventory(schemas.InventoryModel):
     @user.deleter
     def user(self) -> None:
         raise NotImplementedError('Cannot delete a user from an inventory item')
+
+    def add_to_index(self, index: str) -> None:
+        """
+        Add the document to the search index.
+        """
+        job = queue.enqueue(add_item_to_index, index_name=index, item=self, user=self.user)
+        logger.info('Queued job %s to add an item to the %s index', job.id, index)
+        return
+
+    def update_index(self, index: str) -> None:
+        """
+        Update a document in the search index.
+        """
+        job = queue.enqueue(update_item_in_index, index_name=index, item=self, user=self.user)
+        logger.info('Queued job %s to update an item in the %s index', job.id, index)
+        return
+
+    def remove_from_index(self, index: str) -> None:
+        """
+        Remove a document from the search index.
+        """
+        job = queue.enqueue(delete_item_in_index, index_name=index, item_id=self.id)
+        logger.info('Queued job %s to delete an item in the %s index', job.id, index)
+        return
 
     def __repr__(self):
         return f'<{self.__class__.__name__}: {self.name} ({self.pk})>'

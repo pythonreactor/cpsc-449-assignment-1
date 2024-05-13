@@ -1,5 +1,3 @@
-import logging
-
 from elasticsearch import Elasticsearch
 from flask import (
     current_app,
@@ -11,23 +9,7 @@ from redis import Redis
 from rq import Queue
 from werkzeug.local import LocalProxy
 
-logger = logging.getLogger(__name__)
-
-
-def setup_database_indexes(database: PyMongo):
-    """
-    Prepare the database indexes if they don't exist.
-    """
-    for collection_name, indexes in settings.MONGO_INDEXES.items():
-        collection = getattr(database, collection_name)
-
-        # Handle this one at a time to allow for proper error logging
-        for index in indexes:
-            try:
-                collection.create_indexes([index])
-            except Exception:
-                logger.error('Failed to generate %s index %s', collection_name, index.document.get('name'))
-                pass
+logger = settings.getLogger(__name__)
 
 
 def get_db():
@@ -38,9 +20,6 @@ def get_db():
 
     if db is None:
         db = g._database = PyMongo(current_app).db
-
-    logger.info('Generating database indexes...')
-    setup_database_indexes(database=db)
 
     return db
 

@@ -117,6 +117,20 @@ class BaseBulkCreateResponseSchema(BaseSuccessResponseSchema):
     data: List[Dict] = list(dict())
 
 
+class BaseSearchQuerySchema(BasePaginationSchema):
+    ...
+
+    @validator('*', pre=True)
+    def force_lowercase(cls, v):
+        if isinstance(v, str):
+            return v.lower()
+        return v
+
+
+class BaseSearchResponseSchema(BaseSuccessResponseSchema):
+    ...
+
+
 class BaseListQuerySchema(BasePaginationSchema):
     direction: SortDirectionEnum = SortDirectionEnum.Ascending
     order_by: Optional[str] = ''

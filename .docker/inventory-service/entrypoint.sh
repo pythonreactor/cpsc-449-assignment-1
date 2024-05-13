@@ -8,6 +8,8 @@ socat TCP-LISTEN:9200,fork TCP:fim-elasticsearch:9200 &
 # The location directly relates to where it was placed from the Dockerfile
 sh /docker-build-tools/await-db.sh
 
+sh /docker-build-tools/await-es.sh
+
 # Install the environment
 poetry install
 

@@ -11,7 +11,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 # Use poetry add <package> to add dependencies
 
-fim = { path = "fim-1.0.0.tar.gz" }
+fim = { path = "fim-2.0.1.tar.gz" }
 
 python = "^3.11"
 flask = "^3.0.2"

@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from iam import (
+from inventory import (
     db,
-    models,
+    es,
     settings
 )
 
@@ -33,20 +33,13 @@ def setup_database_indexes(database: PyMongo = db):
                 pass
 
 
-def login_user(user: models.User) -> models.IAMAuthToken:
-    """
-    Fetch a user's auth token or create a new one
-    """
-    logger.info('[%s] Generating new user auth token', user.email)
-    del user.token
+def prepare_es_indexes():
+    logger.info('Generating Elasticsearch indexes...')
 
-    token      = models.IAMAuthToken()
-    user.token = token
-
-    try:
-        user.save()
-    except Exception:
-        logger.exception('Error creating new auth token for user: %s', user.email)
-        raise
-
-    return token
+    indexes = settings.ELASTICSEARCH_INDEXES
+    for index_name, index_settings in indexes.items():
+        if not es.indices.exists(index=index_name):
+            es.indices.create(index=index_name, body=index_settings)
+            logger.info('Created index %s in Elasticsearch.', index_name)
+        else:
+            logger.info('Index %s already exists in Elasticsearch.', index_name)

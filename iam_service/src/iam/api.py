@@ -1,4 +1,3 @@
-import logging
 from http import HTTPStatus
 
 from fim.api import (
@@ -42,23 +41,21 @@ from iam.schemas import (
     UserListResponseSchema
 )
 from iam.tags import (
-    external_tag,
     iam_tag,
     superuser_tag
 )
 from iam.utils import login_user
 
-logger      = logging.getLogger(__name__)
-internal_api_v1 = APIView(url_prefix='/api/v1')
-external_api_v1 = APIView(url_prefix='/api/v1/iam')
+logger         = settings.getLogger(__name__)
+service_api_v1 = APIView(url_prefix='/api/v1/iam')
 
 
 # region Internal service APIs
 
-@internal_api_v1.route('/signup')
+@service_api_v1.route('/signup')
 class SignupAPI:
 
-    @internal_api_v1.doc(
+    @service_api_v1.doc(
         tags=[iam_tag],
         operation_id='Signup API POST',
         summary='New user signup',
@@ -81,13 +78,13 @@ class SignupAPI:
             return jsonify(BadRequestResponseSchema(message='error creating new user').dict()), HTTPStatus.BAD_REQUEST
 
 
-@internal_api_v1.route('/login')
+@service_api_v1.route('/login')
 class LoginAPI:
     """
     API endpoint for logging into the system
     """
 
-    @internal_api_v1.doc(
+    @service_api_v1.doc(
         tags=[iam_tag],
         operation_id='Login API POST',
         summary='User login',
@@ -113,7 +110,7 @@ class LoginAPI:
         return jsonify(LoginResponseSchema(message='auth token generated', email=user.email, token=token.key).dict()), HTTPStatus.OK
 
 
-@internal_api_v1.route('/users')
+@service_api_v1.route('/users')
 class UserListAPI(BaseListAPI):
     """
     API endpoint for listing all users
@@ -125,7 +122,7 @@ class UserListAPI(BaseListAPI):
 
     model = models.User
 
-    @internal_api_v1.doc(
+    @service_api_v1.doc(
         tags=[iam_tag],
         operation_id='User List API GET',
         summary='List all users',
@@ -141,7 +138,7 @@ class UserListAPI(BaseListAPI):
         return super().get(query)
 
 
-@internal_api_v1.route('/users/<id>')
+@service_api_v1.route('/<id>')
 class UserDetailAPI(BaseDetailAPI):
     """
     API endpoint for viewing, updating, or deleting a single user
@@ -157,7 +154,7 @@ class UserDetailAPI(BaseDetailAPI):
 
     model = models.User
 
-    @internal_api_v1.doc(
+    @service_api_v1.doc(
         tags=[iam_tag],
         operation_id='User Detail API GET',
         summary='User detail endpoint',
@@ -173,7 +170,7 @@ class UserDetailAPI(BaseDetailAPI):
     def get(self, query: request_query_schema):
         return super().get(query)
 
-    @internal_api_v1.doc(
+    @service_api_v1.doc(
         tags=[iam_tag],
         operation_id='User Detail API PATCH',
         summary='User detail update endpoint',
@@ -190,7 +187,7 @@ class UserDetailAPI(BaseDetailAPI):
     def patch(self, query: request_query_schema, body: request_body_schema):
         return super().patch(query, body)
 
-    @internal_api_v1.doc(
+    @service_api_v1.doc(
         tags=[superuser_tag],
         operation_id='Superuser User API DELETE',
         summary='Superuser only: User delete endpoint',
@@ -207,7 +204,7 @@ class UserDetailAPI(BaseDetailAPI):
         return super().delete(query)
 
 
-@internal_api_v1.route('/users/delete/bulk')
+@service_api_v1.route('/delete/bulk')
 class UserBulkDeleteAPI(BaseBulkDeleteAPI):
     """
     Superuser API endpoint for deleting a batch of users
@@ -219,7 +216,7 @@ class UserBulkDeleteAPI(BaseBulkDeleteAPI):
 
     model = models.User
 
-    @internal_api_v1.doc(
+    @service_api_v1.doc(
         tags=[superuser_tag],
         operation_id='Superuser User Bulk Delete API DELETE',
         summary='Superuser only: User bulk delete endpoint',
@@ -240,7 +237,7 @@ class UserBulkDeleteAPI(BaseBulkDeleteAPI):
 
 # region External service APIs
 
-@external_api_v1.route('/authenticate')
+@service_api_v1.route('/authenticate')
 class ExternalAuthenticationAPI:
 
     authentication_class = IAMTokenAuthentication
