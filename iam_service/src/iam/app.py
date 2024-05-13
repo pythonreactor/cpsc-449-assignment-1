@@ -11,17 +11,16 @@ def create_app():
     cors.init_app(app, resources=settings.CORS_RESOURCES)
 
     with app.app_context():
-        from iam.api import (
-            external_api_v1,
-            internal_api_v1
-        )
+        from iam import utils
+        from iam.api import service_api_v1
 
-        app.register_api_view(internal_api_v1)
-        app.register_api_view(external_api_v1)
+        app.register_api_view(service_api_v1)
+
+        utils.setup_database_indexes()
 
     return app
 
 
 if __name__ == '__main__':
     app = create_app()
-    app.run(host='0.0.0.0')
+    app.run(host=settings.HOST)

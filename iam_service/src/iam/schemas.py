@@ -1,5 +1,4 @@
 import datetime
-import logging
 import os
 import re
 from typing import (
@@ -22,7 +21,7 @@ from pydantic import (
     validator
 )
 
-logger = logging.getLogger(__name__)
+logger = settings.getLogger(__name__)
 
 
 # region Model schemas

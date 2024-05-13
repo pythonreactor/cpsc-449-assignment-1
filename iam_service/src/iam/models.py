@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import datetime
-import logging
 from typing import (
     TYPE_CHECKING,
     Optional
@@ -15,7 +14,7 @@ from iam import (
 )
 from iam.interface import UserQueryInterface
 
-logger = logging.getLogger(__name__)
+logger = settings.getLogger(__name__)
 
 
 if TYPE_CHECKING:

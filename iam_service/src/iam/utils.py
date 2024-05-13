@@ -1,8 +1,36 @@
-import logging
+from __future__ import annotations
 
-from iam import models
+from typing import TYPE_CHECKING
 
-logger = logging.getLogger(__name__)
+from iam import (
+    db,
+    models,
+    settings
+)
+
+logger = settings.getLogger(__name__)
+
+
+if TYPE_CHECKING:
+    from flask_pymongo import PyMongo
+
+
+def setup_database_indexes(database: PyMongo = db):
+    """
+    Prepare the database indexes if they don't exist.
+    """
+    logger.info('Generating database indexes...')
+
+    for collection_name, indexes in settings.MONGO_INDEXES.items():
+        collection = getattr(database, collection_name)
+
+        # Handle this one at a time to allow for proper error logging
+        for index in indexes:
+            try:
+                collection.create_indexes([index])
+            except Exception:
+                logger.error('Failed to generate %s index %s', collection_name, index.document.get('name'))
+                pass
 
 
 def login_user(user: models.User) -> models.IAMAuthToken:
