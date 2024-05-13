@@ -90,9 +90,11 @@ This will allow you to hit protected endpoints that require token authentication
 
 Inventory is currently the only service with an RQ worker. The dashboard can be accessed by going to `http://localhost:8080/rq/inventory`.
 
-# Accessing an the Elasticsearch Index in the browser
+# Accessing an Elasticsearch Index in the browser
 
-Inventory is the only service currently utilizing Elasticsearch but the top-level index can be reached by going to `http://localhost:9200/inventory/_search?pretty`.
+Inventory is the only service currently utilizing Elasticsearch but the top-level index can be reached by going to `http://localhost:9200/<index_name>/_search?pretty`.
+
+For Inventory, it would be: `http://localhost:9200/inventory/_search?pretty`.
 
 # Running a Shell in the Docker Container
 
