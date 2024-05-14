@@ -21,4 +21,11 @@ nohup.out
 __pycache__/
 
 # Docker
-.docker/volumes
+.docker/volumes/fim-redis/*
+!.docker/volumes/fim-redis/.gitkeep
+
+.docker/volumes/fim-mongo/*
+!.docker/volumes/fim-mongo/.gitkeep
+
+.docker/volumes/fim-elasticsearch/*
+!.docker/volumes/fim-elasticsearch/.gitkeep
