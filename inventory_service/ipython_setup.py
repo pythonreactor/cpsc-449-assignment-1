@@ -62,8 +62,7 @@ def get_redis_conn():
         redis_conn = g._redis = Redis(
             host=settings.REDIS_HOST,
             port=settings.REDIS_PORT,
-            db=settings.REDIS_DB,
-            decode_responses=True
+            db=settings.REDIS_DB
         )
 
     return redis_conn
