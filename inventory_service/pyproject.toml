@@ -19,7 +19,7 @@ pydantic = {extras = ["email"], version = "^2.7"}
 flask-openapi3 = "^3.0.2"
 flask-cors = "^4.0.1"
 flask-pymongo = "^2.3.0"
-requests = "^2.31.0"
+requests = "^2.32.0"
 redis = "^5.0.4"
 rq = "^1.16.1"
 elasticsearch = "^8.13.0"
